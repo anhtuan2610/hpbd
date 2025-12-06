@@ -7,8 +7,9 @@ import {
   useAnimationFrame,
   useMotionValue,
 } from "motion/react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { type RefObject, useRef, useState, useEffect } from "react";
+import { useTransition } from "@/contexts/TransitionContext";
 
 const SLIDE_THRESHOLD = 200;
 // Container width = 288px (w-72), nút bắt đầu ở 8px (left-2), nút width = 48px (w-12)
@@ -95,12 +96,29 @@ export default function PowerOffSlide({
   href,
 }: PowerOffSlideProps) {
   const router = useRouter();
+  const pathname = usePathname();
+  const { triggerTransition } = useTransition();
   const [isPoweringOff, setIsPoweringOff] = useState(false);
   const x = useMotionValue(0);
   const controls = useAnimation();
   const constraintsRef = useRef(null);
   const textRef: RefObject<HTMLDivElement | null> = useRef(null);
   const progressRef = useRef<HTMLDivElement>(null);
+  const prevPathnameRef = useRef(pathname);
+
+  // Reset trạng thái khi pathname thay đổi (back/forward)
+  useEffect(() => {
+    if (prevPathnameRef.current !== pathname) {
+      // Reset sau một chút để tránh cascading renders
+      const timer = setTimeout(() => {
+        setIsPoweringOff(false);
+        x.set(0);
+        controls.set({ x: 0 });
+      }, 0);
+      prevPathnameRef.current = pathname;
+      return () => clearTimeout(timer);
+    }
+  }, [pathname, x, controls]);
 
   // Cập nhật hiệu ứng progress khi slide
   useEffect(() => {
@@ -150,12 +168,16 @@ export default function PowerOffSlide({
         onPowerOff();
       }
 
-      // Navigate sau khi animation xong
+      // Trigger transition ngay lập tức
+      triggerTransition();
+
+      // Navigate sau khi đóng vào xong + delay: đóng vào (600ms) + delay (1000ms) = 1600ms
+      // Navigate trước khi mở ra để nội dung mới được load
       setTimeout(() => {
         if (href) {
           router.push(href);
         }
-      }, duration);
+      }, 1600);
     } else {
       controls.start({ x: 0 });
     }
@@ -164,101 +186,76 @@ export default function PowerOffSlide({
   return (
     <div className={`flex h-auto items-center justify-center ${className}`}>
       <div className="w-72">
-        {isPoweringOff ? (
+        <div
+          className="relative h-16 overflow-hidden rounded-full border-2 border-white/30 bg-gradient-to-r from-pink-200/80 via-purple-200/80 to-indigo-200/80 backdrop-blur-sm shadow-2xl"
+          ref={constraintsRef}
+          style={{
+            boxShadow:
+              "0 8px 32px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.3)",
+            opacity: 0.85, // Giảm opacity để nhìn thấy các icon phía sau
+          }}
+        >
+          {/* Phần đã slide - với hiệu ứng gradient và glow */}
           <motion.div
-            className="text-center text-white"
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-          >
-            <p className="mb-2 font-light text-xl">Đang chuyển trang...</p>
-            <div className="flex justify-center gap-1">
-              {[0, 1, 2].map((i) => (
-                <motion.div
-                  key={i}
-                  className="h-2 w-2 rounded-full bg-white"
-                  animate={{
-                    scale: [1, 1.2, 1],
-                    opacity: [0.5, 1, 0.5],
-                  }}
-                  transition={{
-                    duration: 0.6,
-                    repeat: Infinity,
-                    delay: i * 0.2,
-                  }}
-                />
-              ))}
-            </div>
-          </motion.div>
-        ) : (
-          <div
-            className="relative h-16 overflow-hidden rounded-full border-2 border-white/30 bg-gradient-to-r from-pink-200/80 via-purple-200/80 to-indigo-200/80 backdrop-blur-sm shadow-2xl"
-            ref={constraintsRef}
+            ref={progressRef}
+            className="absolute left-0 top-0 z-0 h-full rounded-full bg-gradient-to-r from-pink-400 via-purple-400 to-indigo-400"
             style={{
+              width: "0%",
+              opacity: 0,
               boxShadow:
-                "0 8px 32px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.3)",
-              opacity: 0.85, // Giảm opacity để nhìn thấy các icon phía sau
+                "inset 0 0 20px rgba(255, 255, 255, 0.3), 0 0 30px rgba(147, 51, 234, 0.5)",
             }}
+          />
+
+          {/* Text label */}
+          <div
+            className="absolute left-1/2 top-1/2 z-[1] pointer-events-none"
+            style={{ transform: "translate(-45%, -50%)" }}
           >
-            {/* Phần đã slide - với hiệu ứng gradient và glow */}
-            <motion.div
-              ref={progressRef}
-              className="absolute left-0 top-0 z-0 h-full rounded-full bg-gradient-to-r from-pink-400 via-purple-400 to-indigo-400"
-              style={{
-                width: "0%",
-                opacity: 0,
-                boxShadow:
-                  "inset 0 0 20px rgba(255, 255, 255, 0.3), 0 0 30px rgba(147, 51, 234, 0.5)",
-              }}
-            />
-
-            {/* Text label */}
-            <div
-              className="absolute left-1/2 top-1/2 z-[1] pointer-events-none"
-              style={{ transform: "translate(-45%, -50%)" }}
-            >
-              <div className="select-none text-center font-semibold text-white text-lg drop-shadow-lg whitespace-nowrap">
-                {label}
-              </div>
+            <div className="select-none text-center font-semibold text-white text-lg drop-shadow-lg whitespace-nowrap">
+              {label}
             </div>
-
-            {/* Nút Cake với hiệu ứng */}
-            <motion.div
-              animate={controls}
-              aria-disabled={disabled}
-              className={`absolute top-2 left-2 z-20 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-white to-pink-100 shadow-xl ${
-                disabled
-                  ? "cursor-not-allowed opacity-50"
-                  : "cursor-grab active:cursor-grabbing"
-              }`}
-              drag={disabled ? false : "x"}
-              dragConstraints={{ left: 0, right: SLIDE_MAX_DISTANCE }}
-              dragElastic={0}
-              dragMomentum={false}
-              onDragEnd={handleDragEnd}
-              style={{ x, zIndex: 20 }}
-              tabIndex={disabled ? -1 : 0}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <motion.div
-                animate={{
-                  rotate: [0, 5, -5, 0],
-                  scale: [1, 1.1, 1],
-                }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
-              >
-                <Cake className="text-pink-500" size={28} />
-              </motion.div>
-            </motion.div>
-
-            {/* Hiệu ứng particles khi slide */}
-            <ParticlesEffect x={x} threshold={SLIDE_THRESHOLD * 0.5} />
           </div>
-        )}
+
+          {/* Nút Cake với hiệu ứng */}
+          <motion.div
+            animate={controls}
+            aria-disabled={disabled || isPoweringOff}
+            className={`absolute top-2 left-2 z-20 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-white to-pink-100 shadow-xl ${
+              disabled || isPoweringOff
+                ? "cursor-not-allowed opacity-50"
+                : "cursor-grab active:cursor-grabbing"
+            }`}
+            drag={disabled || isPoweringOff ? false : "x"}
+            dragConstraints={{ left: 0, right: SLIDE_MAX_DISTANCE }}
+            dragElastic={0}
+            dragMomentum={false}
+            onDragEnd={handleDragEnd}
+            style={{ x, zIndex: 20 }}
+            tabIndex={disabled || isPoweringOff ? -1 : 0}
+            whileHover={isPoweringOff ? {} : { scale: 1.05 }}
+            whileTap={isPoweringOff ? {} : { scale: 0.95 }}
+          >
+            <motion.div
+              animate={{
+                rotate: [0, 5, -5, 0],
+                scale: [1, 1.1, 1],
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+            >
+              <Cake className="text-pink-500" size={28} />
+            </motion.div>
+          </motion.div>
+
+          {/* Hiệu ứng particles khi slide */}
+          {!isPoweringOff && (
+            <ParticlesEffect x={x} threshold={SLIDE_THRESHOLD * 0.5} />
+          )}
+        </div>
       </div>
     </div>
   );

@@ -2,7 +2,7 @@
 
 import ClickSpark from "@/components/ClickSpark";
 import FloatingIconsField from "@/components/FloatingIcons";
-import Link from "next/link";
+import AnimatedLink from "@/components/AnimatedLink";
 
 export default function Page2() {
   return (
@@ -24,12 +24,12 @@ export default function Page2() {
         </main>
 
         {/* Nút Back */}
-        <Link
+        <AnimatedLink
           href="/"
           className="absolute bottom-8 left-8 z-20 rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 px-8 py-4 text-lg font-bold text-white shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-xl active:scale-95"
         >
           ← Back
-        </Link>
+        </AnimatedLink>
       </div>
     </ClickSpark>
   );
