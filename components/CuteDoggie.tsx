@@ -3,6 +3,7 @@
 import Lottie, { LottieRefCurrentProps } from "lottie-react";
 import { motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
+import TextType from "./TextType";
 
 type Phase = 1 | 2 | 3;
 
@@ -10,7 +11,7 @@ export default function CuteDoggie() {
   const [animationData, setAnimationData] = useState(null);
   const [containerWidth, setContainerWidth] = useState(0);
   const [phase, setPhase] = useState<Phase>(1);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [textKey, setTextKey] = useState(0); // Key để force re-render TextType
   const lottieRef = useRef<LottieRefCurrentProps>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -57,36 +58,29 @@ export default function CuteDoggie() {
   // Xử lý click vào con chó
   const handleDogClick = () => {
     if (phase === 1) {
+      // Chuyển thẳng sang phase 2, TextType sẽ tự reset và chạy text mới
       setPhase(2);
+      setTextKey((prev) => prev + 1);
     }
   };
 
-  // Xử lý hiệu ứng xóa text
+  // Tự động chuyển từ phase 2 sang phase 3 sau khi typing xong
   useEffect(() => {
     if (phase === 2) {
-      // Sau 2 giây, bắt đầu xóa
-      const deleteTimeout = setTimeout(() => {
-        setIsDeleting(true);
-        // Sau khi xóa xong (1 giây), chuyển sang phase 3
-        setTimeout(() => {
-          setIsDeleting(false);
-          setPhase(3);
-        }, 1000);
-      }, 2000);
-      return () => clearTimeout(deleteTimeout);
+      // Ước tính thời gian typing: "Há lu, Tuấn nè !" có khoảng 15 ký tự
+      // typingSpeed = 50ms, pauseDuration = 3000ms
+      // Tổng thời gian: 15 * 50 + 3000 = 3750ms
+      const typingTime = "Há lu, Tuấn nè !".length * 50;
+      const totalTime = typingTime + 3000; // pauseDuration + thời gian đọc
+
+      const timeout = setTimeout(() => {
+        setPhase(3);
+        setTextKey((prev) => prev + 1);
+      }, totalTime);
+
+      return () => clearTimeout(timeout);
     }
   }, [phase]);
-
-  // Nội dung text theo phase
-  const getChatText = () => {
-    if (phase === 1) {
-      return "Bấm vào tớ nè";
-    } else if (phase === 2) {
-      return isDeleting ? "" : "abc";
-    } else {
-      return "xyz";
-    }
-  };
 
   // Làm chậm animation - tăng duration
   // 30 giây cho 1920px, tỷ lệ với chiều rộng
@@ -116,39 +110,99 @@ export default function CuteDoggie() {
           ease: "linear",
         }}
         style={{
-          width: dogWidth, // Cùng chiều rộng với con chó để căn giữa đúng
+          minWidth: dogWidth, // Chiều rộng tối thiểu bằng con chó để căn giữa đúng
         }}
       >
-        <motion.div
+        <div
           className="absolute -top-50 left-1/2 -translate-x-1/2"
-          animate={{
-            y: [0, -5, 0], // Hiệu ứng nhẹ nhàng lên xuống
-          }}
-          transition={{
-            duration: 2,
-            repeat: Infinity,
-            ease: "easeInOut",
-          }}
+          style={{ width: "max-content", maxWidth: "500px" }}
         >
           <div className="relative bg-white rounded-lg px-4 py-2 shadow-lg border-2 border-pink-300">
-            <motion.p
-              className="text-sm font-semibold text-pink-600 whitespace-nowrap"
-              animate={{
-                opacity: isDeleting ? [1, 0] : 1,
-                scale: isDeleting ? [1, 0.8] : 1,
-              }}
-              transition={{
-                duration: isDeleting ? 1 : 0,
-                ease: "easeInOut",
-              }}
-            >
-              {getChatText()}
-            </motion.p>
+            {phase === 1 ? (
+              <TextType
+                key={`phase-1-${textKey}`}
+                text="Bấm vào tớ nè"
+                as="p"
+                className="text-sm font-semibold text-pink-600 break-words"
+                style={{
+                  display: "-webkit-box",
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: "vertical",
+                  overflow: "hidden",
+                  lineHeight: "1.5em",
+                  width: "100%",
+                }}
+                typingSpeed={50}
+                pauseDuration={0}
+                deletingSpeed={30}
+                loop={false}
+                showCursor={true}
+                variableSpeed={undefined}
+                onSentenceComplete={undefined}
+              />
+            ) : phase === 2 ? (
+              <TextType
+                key={`phase-2-${textKey}`}
+                text="Há lu, Tuấn nè !"
+                as="p"
+                className="text-sm font-semibold text-pink-600 break-words"
+                style={{
+                  display: "-webkit-box",
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: "vertical",
+                  overflow: "hidden",
+                  lineHeight: "1.5em",
+                  wordBreak: "break-word",
+                }}
+                typingSpeed={50}
+                pauseDuration={2000}
+                deletingSpeed={30}
+                loop={false}
+                showCursor={true}
+                variableSpeed={undefined}
+                onSentenceComplete={undefined}
+              />
+            ) : (
+              <div
+                className="text-sm font-semibold text-pink-600 break-words"
+                style={{ lineHeight: "1.5em" }}
+              >
+                <div>
+                  <TextType
+                    key={`phase-3-line1-${textKey}`}
+                    text="Chúc Quyên sinh nhật"
+                    as="span"
+                    className=""
+                    typingSpeed={50}
+                    pauseDuration={0}
+                    loop={false}
+                    showCursor={false}
+                    variableSpeed={undefined}
+                    onSentenceComplete={undefined}
+                  />
+                </div>
+                <div>
+                  <TextType
+                    key={`phase-3-line2-${textKey}`}
+                    text="vui vẻ nhé !"
+                    as="span"
+                    className=""
+                    typingSpeed={50}
+                    initialDelay={"Chúc Quyên sinh nhật".length * 50}
+                    pauseDuration={3000}
+                    loop={false}
+                    showCursor={true}
+                    variableSpeed={undefined}
+                    onSentenceComplete={undefined}
+                  />
+                </div>
+              </div>
+            )}
             <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-full">
               <div className="w-0 h-0 border-l-8 border-r-8 border-t-8 border-l-transparent border-r-transparent border-t-pink-300"></div>
             </div>
           </div>
-        </motion.div>
+        </div>
       </motion.div>
 
       {/* Con chó với flip */}

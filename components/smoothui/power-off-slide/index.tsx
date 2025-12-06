@@ -13,7 +13,8 @@ import { type RefObject, useRef, useState, useEffect } from "react";
 const SLIDE_THRESHOLD = 200;
 // Container width = 288px (w-72), nút bắt đầu ở 8px (left-2), nút width = 48px (w-12)
 // SLIDE_MAX_DISTANCE = 288 - 8 - 48 = 232px
-const SLIDE_MAX_DISTANCE = 232;
+// Giảm xuống 200px để bánh kem chỉ kéo đến gần cuối, không ra ngoài hẳn
+const SLIDE_MAX_DISTANCE = 222;
 const PERCENTAGE_MULTIPLIER = 100;
 const BUTTON_WIDTH = 48; // w-12
 const BUTTON_START_OFFSET = 8; // left-2
@@ -107,10 +108,12 @@ export default function PowerOffSlide({
       if (progressRef.current && constraintsRef.current) {
         const containerWidth = (constraintsRef.current as HTMLElement)
           .offsetWidth;
-        // Tính width của progress để bao phủ từ đầu đến vị trí của bánh kem (bao gồm cả bánh kem)
-        // Progress width = (vị trí bắt đầu + x + width của nút) / containerWidth
+        // Tính width của progress để bao phủ từ đầu đến vị trí của bánh kem + vượt qua một chút
+        // Progress width = (vị trí bắt đầu + x + width của nút + offset) / containerWidth
+        const OVERFLOW_OFFSET = 10; // Vượt qua bánh kem 20px
         const progressWidth =
-          (BUTTON_START_OFFSET + latest + BUTTON_WIDTH) / containerWidth;
+          (BUTTON_START_OFFSET + latest + BUTTON_WIDTH + OVERFLOW_OFFSET) /
+          containerWidth;
         const progress = Math.min(progressWidth, 1);
         progressRef.current.style.width = `${progress * 100}%`;
         progressRef.current.style.opacity = `${Math.min(
@@ -193,6 +196,7 @@ export default function PowerOffSlide({
             style={{
               boxShadow:
                 "0 8px 32px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.3)",
+              opacity: 0.85, // Giảm opacity để nhìn thấy các icon phía sau
             }}
           >
             {/* Phần đã slide - với hiệu ứng gradient và glow */}

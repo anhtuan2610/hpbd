@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import ClickSpark from "@/components/ClickSpark";
 import CurvedLoop from "@/components/CurvedLoop";
 import FloatingIconsField from "@/components/FloatingIcons";
@@ -20,7 +21,30 @@ export default function Home() {
 
         {/* Slide Button ở giữa màn hình */}
         <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none">
-          <div className="pointer-events-auto">
+          <div className="relative pointer-events-auto">
+            {/* Mũi tên trỏ vào bánh kem (bên trái nút) */}
+            <div className="absolute -top-24 left-7 pointer-events-none">
+              <p
+                className="absolute text-lg font-semibold text-pink-600 drop-shadow-lg whitespace-nowrap"
+                style={{
+                  top: "30px",
+                  left: "90%", // Điều chỉnh giá trị này để di chuyển text trái/phải
+                  transform: "translateX(-50%)", // Căn giữa text
+                  rotate: "30deg",
+                }}
+              >
+                Kéo cái này nè
+              </p>
+              <div className="relative w-30 h-30">
+                <Image
+                  src="/arrow.png"
+                  alt="Arrow pointing to cake button"
+                  fill
+                  className="object-contain"
+                  style={{ transform: "rotate(180deg)" }}
+                />
+              </div>
+            </div>
             <PowerOffSlide
               label="Đi thổi nến nào"
               onPowerOff={() => {
