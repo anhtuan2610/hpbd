@@ -208,8 +208,11 @@ export default function PowerOffSlide({
             />
 
             {/* Text label */}
-            <div className="absolute inset-0 left-12 z-[1] flex items-center justify-center overflow-hidden pointer-events-none">
-              <div className="relative w-full select-none text-center font-semibold text-white text-lg drop-shadow-lg">
+            <div
+              className="absolute left-1/2 top-1/2 z-[1] pointer-events-none"
+              style={{ transform: "translate(-45%, -50%)" }}
+            >
+              <div className="select-none text-center font-semibold text-white text-lg drop-shadow-lg whitespace-nowrap">
                 {label}
               </div>
             </div>

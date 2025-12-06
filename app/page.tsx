@@ -4,6 +4,7 @@ import ClickSpark from "@/components/ClickSpark";
 import CurvedLoop from "@/components/CurvedLoop";
 import FloatingIconsField from "@/components/FloatingIcons";
 import PowerOffSlide from "@/components/smoothui/power-off-slide";
+import CuteDoggie from "@/components/CuteDoggie";
 
 export default function Home() {
   return (
@@ -17,16 +18,32 @@ export default function Home() {
           <CurvedLoop marqueeText="Happy Birthday! Chúc mừng Quyên sinh nhật vui vẻ nhé! " />
         </main>
 
-        {/* Power Off Slide ở giữa màn hình */}
-        <div className="absolute inset-0 z-20 flex items-center justify-center">
-          <PowerOffSlide
-            label="Đi thổi nến nào"
-            onPowerOff={() => {
-              console.log("Power off triggered");
+        {/* Slide Button ở giữa màn hình */}
+        <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none">
+          <div className="pointer-events-auto">
+            <PowerOffSlide
+              label="Đi thổi nến nào"
+              onPowerOff={() => {
+                console.log("Power off triggered");
+              }}
+              href="/tuancooking"
+              className=""
+            />
+          </div>
+        </div>
+
+        {/* Phần dưới cùng màn hình - nơi các con vật đứng */}
+        <div className="absolute bottom-0 left-0 right-0 z-10 pointer-events-none">
+          {/* Mặt đất đơn giản */}
+          <div
+            className="w-full bg-gradient-to-t from-green-600 to-green-500"
+            style={{
+              height: "60px",
             }}
-            href="/tuancooking"
-            className=""
           />
+
+          {/* Animation chó con */}
+          <CuteDoggie />
         </div>
       </div>
     </ClickSpark>
