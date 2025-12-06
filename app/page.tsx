@@ -3,7 +3,7 @@
 import ClickSpark from "@/components/ClickSpark";
 import CurvedLoop from "@/components/CurvedLoop";
 import FloatingIconsField from "@/components/FloatingIcons";
-import Link from "next/link";
+import PowerOffSlide from "@/components/smoothui/power-off-slide";
 
 export default function Home() {
   return (
@@ -17,13 +17,17 @@ export default function Home() {
           <CurvedLoop marqueeText="Happy Birthday! Chúc mừng Quyên sinh nhật vui vẻ nhé! " />
         </main>
 
-        {/* Nút Next */}
-        <Link
-          href="/tuancooking"
-          className="absolute bottom-8 right-8 z-20 rounded-full bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 px-8 py-4 text-lg font-bold text-white shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-xl active:scale-95"
-        >
-          Next →
-        </Link>
+        {/* Power Off Slide ở giữa màn hình */}
+        <div className="absolute inset-0 z-20 flex items-center justify-center">
+          <PowerOffSlide
+            label="Đi thổi nến nào"
+            onPowerOff={() => {
+              console.log("Power off triggered");
+            }}
+            href="/tuancooking"
+            className=""
+          />
+        </div>
       </div>
     </ClickSpark>
   );
