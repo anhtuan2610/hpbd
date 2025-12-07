@@ -9,6 +9,7 @@ import CandleSvg from "@/components/CandleSvg";
 import ThemeButton from "@/components/ThemeButton";
 import FireAnimation from "@/components/FireAnimation";
 import { StarsBackground } from "@/components/animate-ui/components/backgrounds/stars";
+import { useBlowDetection } from "@/hooks/useBlowDetection";
 
 type CandlePosition = {
   id: number;
@@ -18,8 +19,25 @@ type CandlePosition = {
 
 export default function Page2() {
   const [candles, setCandles] = useState<CandlePosition[]>([]);
+  const [blowDetected, setBlowDetected] = useState(false);
   const hasSetInitialTheme = useRef(false);
   const { theme, systemTheme, resolvedTheme, setTheme } = useTheme();
+
+  // Xử lý khi phát hiện tiếng thổi
+  const handleBlowDetected = () => {
+    console.log("🔥 Xử lý tiếng thổi - sẽ tắt nến ở đây");
+    // Hiển thị indicator
+    setBlowDetected(true);
+    // Ẩn indicator sau 1 giây
+    setTimeout(() => {
+      setBlowDetected(false);
+    }, 1000);
+    // TODO: Xử lý tắt nến sau
+  };
+
+  // Sử dụng hook phát hiện tiếng thổi
+  const { startListening, isListening, hasPermission, error, isLoading } =
+    useBlowDetection(handleBlowDetected, 0.5, 0.7);
 
   // Force light mode on initial mount (only once)
   useEffect(() => {
@@ -60,6 +78,19 @@ export default function Page2() {
 
   const content = (
     <>
+      {/* Indicator khi phát hiện tiếng thổi */}
+      {blowDetected && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
+          <div className="bg-green-500/90 text-white px-8 py-6 rounded-2xl shadow-2xl animate-pulse scale-110">
+            <div className="text-center">
+              <div className="text-6xl mb-2">💨</div>
+              <div className="text-2xl font-bold">Đã phát hiện tiếng thổi!</div>
+              <div className="text-lg mt-1">Blow Detected!</div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Các icon bay lên */}
       {/* <FloatingIconsField /> */}
 
@@ -113,6 +144,57 @@ export default function Page2() {
         {/* <AnimatedThemeToggler className="rounded-full bg-white/80 dark:bg-gray-800/80 p-3 shadow-lg hover:bg-white dark:hover:bg-gray-800 transition-colors" /> */}
         <ThemeButton />
       </div>
+
+      {/* Nút bật microphone và trạng thái */}
+      {!hasPermission && !isLoading && (
+        <div className="fixed top-4 right-4 z-30">
+          <button
+            onClick={startListening}
+            className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-full shadow-lg font-bold text-lg flex items-center gap-2 transition-all duration-300 hover:scale-105 active:scale-95"
+          >
+            <span className="text-2xl">🎤</span>
+            <span>Bật Microphone</span>
+          </button>
+        </div>
+      )}
+
+      {/* Hiển thị loading */}
+      {isLoading && (
+        <div className="fixed top-4 right-4 z-30 bg-yellow-500 text-white px-6 py-3 rounded-full shadow-lg font-bold text-lg flex items-center gap-2">
+          <span className="text-2xl animate-spin">⏳</span>
+          <span>Đang yêu cầu quyền...</span>
+        </div>
+      )}
+
+      {/* Hiển thị trạng thái đang nghe */}
+      {isListening && hasPermission && (
+        <div className="fixed top-4 right-4 z-30 bg-green-500 text-white px-6 py-3 rounded-full shadow-lg font-bold text-lg flex items-center gap-2 animate-pulse">
+          <span className="text-2xl">🎧</span>
+          <span>Đang nghe...</span>
+        </div>
+      )}
+
+      {/* Hiển thị lỗi */}
+      {error && (
+        <div className="fixed top-4 right-4 z-30 bg-red-500 text-white px-6 py-4 rounded-2xl shadow-lg font-bold text-sm max-w-xs">
+          <div className="flex items-start gap-2">
+            <span className="text-2xl">⚠️</span>
+            <div>
+              <div className="font-bold mb-1">Lỗi:</div>
+              <div className="text-xs">{error}</div>
+            </div>
+            <button
+              onClick={() => {
+                // Clear error by trying again
+                startListening();
+              }}
+              className="ml-2 text-white hover:text-gray-200"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
     </>
   );
 
