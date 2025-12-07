@@ -19,25 +19,35 @@ type CandlePosition = {
 
 export default function Page2() {
   const [candles, setCandles] = useState<CandlePosition[]>([]);
-  const [blowDetected, setBlowDetected] = useState(false);
+  const [showBlowSuccess, setShowBlowSuccess] = useState(false);
+  const [isBlowConfirmed, setIsBlowConfirmed] = useState(true); // Cho phép thổi lần đầu
   const hasSetInitialTheme = useRef(false);
   const { theme, systemTheme, resolvedTheme, setTheme } = useTheme();
 
   // Xử lý khi phát hiện tiếng thổi
   const handleBlowDetected = () => {
+    // Chỉ xử lý nếu đã xác nhận lần thổi trước đó
+    if (!isBlowConfirmed) {
+      return; // Bỏ qua nếu chưa xác nhận
+    }
+
     console.log("🔥 Xử lý tiếng thổi - sẽ tắt nến ở đây");
-    // Hiển thị indicator
-    setBlowDetected(true);
-    // Ẩn indicator sau 1 giây
-    setTimeout(() => {
-      setBlowDetected(false);
-    }, 1000);
+    // Hiển thị thông báo và chặn thổi tiếp
+    setShowBlowSuccess(true);
+    setIsBlowConfirmed(false);
     // TODO: Xử lý tắt nến sau
+  };
+
+  // Xử nhận thổi thành công
+  const handleConfirmBlow = () => {
+    setShowBlowSuccess(false);
+    setIsBlowConfirmed(true); // Cho phép thổi tiếp
   };
 
   // Sử dụng hook phát hiện tiếng thổi
   // threshold: 0.5 (giảm xuống để dễ detect hơn)
   // sensitivity: 0.7 (giảm xuống để dễ detect hơn)
+  // canTrigger: chỉ trigger khi đã xác nhận lần thổi trước
   const {
     startListening,
     isListening,
@@ -45,8 +55,7 @@ export default function Page2() {
     error,
     isLoading,
     permissionStatus,
-    blowProgress,
-  } = useBlowDetection(handleBlowDetected, 0.5, 0.7);
+  } = useBlowDetection(handleBlowDetected, 0.5, 0.7, () => isBlowConfirmed);
 
   // Force light mode on initial mount (only once)
   useEffect(() => {
@@ -87,14 +96,22 @@ export default function Page2() {
 
   const content = (
     <>
-      {/* Indicator khi phát hiện tiếng thổi */}
-      {blowDetected && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
-          <div className="bg-green-500/90 text-white px-8 py-6 rounded-2xl shadow-2xl animate-pulse scale-110">
+      {/* Thông báo khi phát hiện tiếng thổi - chỉ hiện 1 lần, cần xác nhận */}
+      {showBlowSuccess && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="bg-linear-to-br from-green-500 to-emerald-600 text-white px-8 py-8 rounded-3xl shadow-2xl max-w-md mx-4 border-4 border-white/20">
             <div className="text-center">
-              <div className="text-6xl mb-2">💨</div>
-              <div className="text-2xl font-bold">Đã phát hiện tiếng thổi!</div>
-              <div className="text-lg mt-1">Blow Detected!</div>
+              <div className="text-7xl mb-4 animate-bounce">🎉</div>
+              <div className="text-3xl font-bold mb-2">Thổi thành công!</div>
+              <div className="text-lg mb-6 opacity-90">
+                Bạn đã thổi tắt nến rồi!
+              </div>
+              <button
+                onClick={handleConfirmBlow}
+                className="bg-white text-green-600 px-8 py-3 rounded-full font-bold text-lg hover:bg-gray-100 transition-all duration-300 hover:scale-105 active:scale-95 shadow-lg"
+              >
+                Xác nhận
+              </button>
             </div>
           </div>
         </div>
@@ -154,15 +171,17 @@ export default function Page2() {
         <ThemeButton />
       </div>
 
-      {/* Nút bật microphone và trạng thái */}
-      {!hasPermission && !isLoading && (
+      {/* Nút bật microphone - chỉ hiển thị khi dark mode */}
+      {!hasPermission && !isLoading && resolvedTheme === "dark" && (
         <div className="fixed top-4 right-4 z-30">
           <button
             onClick={startListening}
-            className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-full shadow-lg font-bold text-lg flex items-center gap-2 transition-all duration-300 hover:scale-105 active:scale-95"
+            className="bg-linear-to-r from-purple-600 via-pink-600 to-red-600 hover:from-purple-700 hover:via-pink-700 hover:to-red-700 text-white px-8 py-4 rounded-full shadow-2xl font-bold text-lg flex items-center gap-3 transition-all duration-300 hover:scale-110 active:scale-95 border-2 border-white/30 backdrop-blur-sm"
           >
-            <span className="text-2xl">🎤</span>
-            <span>Bật Microphone</span>
+            <span className="text-3xl animate-pulse">🎂</span>
+            <span className="bg-white/20 px-4 py-1 rounded-full">
+              Bắt đầu thổi nến!
+            </span>
           </button>
         </div>
       )}
@@ -175,31 +194,15 @@ export default function Page2() {
         </div>
       )}
 
-      {/* Hiển thị trạng thái đang nghe và thanh progress */}
-      {isListening && hasPermission && (
-        <div className="fixed top-4 right-4 z-30 bg-green-500 text-white px-6 py-3 rounded-2xl shadow-lg font-bold text-sm">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-2xl">🎧</span>
-            <span>Đang nghe... Hãy thổi vào microphone!</span>
+      {/* Hiển thị trạng thái đang nghe - chỉ hiển thị khi dark mode */}
+      {isListening && hasPermission && resolvedTheme === "dark" && (
+        <div className="fixed top-4 right-4 z-30 bg-linear-to-r from-green-500 to-emerald-600 text-white px-6 py-4 rounded-2xl shadow-2xl font-bold text-sm border-2 border-white/30 backdrop-blur-sm">
+          <div className="flex items-center gap-3">
+            <span className="text-3xl animate-pulse">💨</span>
+            <span className="bg-white/20 px-4 py-2 rounded-full">
+              Đang nghe... Hãy thổi vào microphone!
+            </span>
           </div>
-          {/* Thanh progress */}
-          <div className="w-full bg-white/30 rounded-full h-4 overflow-hidden">
-            <div
-              className="h-full bg-white transition-all duration-100 ease-out rounded-full flex items-center justify-center"
-              style={{ width: `${blowProgress}%` }}
-            >
-              {blowProgress > 10 && (
-                <span className="text-xs font-bold text-green-600">
-                  {Math.round(blowProgress)}%
-                </span>
-              )}
-            </div>
-          </div>
-          {blowProgress > 0 && blowProgress < 100 && (
-            <div className="text-xs mt-1 text-center">
-              Tiếp tục thổi... {Math.round(blowProgress)}%
-            </div>
-          )}
         </div>
       )}
 

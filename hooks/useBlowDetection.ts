@@ -5,7 +5,8 @@ import { useEffect, useRef, useState } from "react";
 export function useBlowDetection(
   onBlowDetected: () => void,
   threshold: number = 0.5, // Ngưỡng âm lượng để phát hiện thổi
-  sensitivity: number = 0.7 // Độ nhạy (0-1)
+  sensitivity: number = 0.7, // Độ nhạy (0-1)
+  canTrigger: () => boolean = () => true // Callback để kiểm tra xem có được phép trigger không
 ) {
   const [isListening, setIsListening] = useState(false);
   const [hasPermission, setHasPermission] = useState(false);
@@ -189,15 +190,19 @@ export function useBlowDetection(
           );
         }
 
-        // Khi progress đạt 100%, trigger success
+        // Khi progress đạt 100%, trigger success (chỉ khi được phép)
         if (progressRef.current >= 100) {
           const now = Date.now();
-          if (now - lastBlowTimeRef.current > BLOW_COOLDOWN) {
+          if (now - lastBlowTimeRef.current > BLOW_COOLDOWN && canTrigger()) {
             lastBlowTimeRef.current = now;
             progressRef.current = 0; // Reset progress
             setBlowProgress(0);
             console.log("💨 PHÁT HIỆN TIẾNG THỔI! (Blow detected!)");
             onBlowDetected();
+          } else if (!canTrigger()) {
+            // Nếu chưa được phép, reset progress nhưng không trigger
+            progressRef.current = 0;
+            setBlowProgress(0);
           }
         }
 
