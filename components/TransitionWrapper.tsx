@@ -16,33 +16,41 @@ function TransitionWrapperInner({ children }: TransitionWrapperInnerProps) {
   const pathname = usePathname();
   const { isTransitioning, setIsTransitioning } = useTransition();
   const [displayChildren, setDisplayChildren] = useState(children);
-  const prevPathnameRef = useRef(pathname);
-  const [shouldTransition, setShouldTransition] = useState(false);
+  const prevPathnameRef = useRef<string | null>(null);
+  const [transitionMode, setTransitionMode] = useState<
+    "closing" | "opening" | "closed" | "none"
+  >("closed"); // Bắt đầu ở trạng thái đóng
   const isManualTransitionRef = useRef(false);
 
   // Listen to manual transition trigger (từ slide button)
   useEffect(() => {
     if (isTransitioning) {
+      // Đánh dấu manual trigger ngay lập tức
       isManualTransitionRef.current = true;
-      // Wrap setState trong setTimeout để tránh cascading renders
-      const initTimer = setTimeout(() => {
-        setShouldTransition(true);
-      }, 0);
 
-      // Sau 600ms (đóng vào) + 1000ms (delay), thay đổi nội dung (lúc này router đã navigate)
+      // Đóng page hiện tại
+      setTransitionMode("closing");
+
+      // Sau 800ms (đóng xong) + 1000ms delay, navigate và mở page mới
       const timer = setTimeout(() => {
-        // Cập nhật children với nội dung mới từ router
         setDisplayChildren(children);
-        // Sau khi transition hoàn tất (600ms mở ra), reset trạng thái
+        // Page mới bắt đầu ở trạng thái đóng
+        setTransitionMode("closed");
+
+        // Sau 1s delay, mở page mới
         setTimeout(() => {
-          setShouldTransition(false);
-          setIsTransitioning(false);
-          isManualTransitionRef.current = false;
+          setTransitionMode("opening");
+
+          // Sau khi mở xong, reset
+          setTimeout(() => {
+            setTransitionMode("none");
+            setIsTransitioning(false);
+            isManualTransitionRef.current = false;
+          }, 800);
         }, 1000);
-      }, 1000 + 1000);
+      }, 800);
 
       return () => {
-        clearTimeout(initTimer);
         clearTimeout(timer);
       };
     }
@@ -51,46 +59,62 @@ function TransitionWrapperInner({ children }: TransitionWrapperInnerProps) {
   // Trigger transition tự động khi pathname thay đổi (back/forward navigation)
   useEffect(() => {
     if (prevPathnameRef.current !== pathname) {
-      // Nếu không có manual trigger đang chạy, trigger transition tự động
+      // Nếu không có manual trigger đang chạy
       if (!isManualTransitionRef.current) {
-        // Wrap setState trong setTimeout để tránh cascading renders
-        const initTimer = setTimeout(() => {
-          setShouldTransition(true);
-        }, 0);
+        // Nếu đã có page trước đó, đóng page cũ trước
+        if (prevPathnameRef.current !== null) {
+          setTransitionMode("closing");
 
-        // Sau 600ms (đóng vào) + 1000ms (delay), thay đổi nội dung
-        const timer = setTimeout(() => {
+          // Sau khi đóng xong (800ms) + 1000ms delay, cập nhật children và mở page mới
+          const timer = setTimeout(() => {
+            setDisplayChildren(children);
+            // Page mới bắt đầu ở trạng thái đóng
+            setTransitionMode("closed");
+
+            // Sau 1s delay, mở page mới
+            setTimeout(() => {
+              setTransitionMode("opening");
+
+              // Sau khi mở xong, reset
+              setTimeout(() => {
+                setTransitionMode("none");
+              }, 800);
+            }, 1000);
+          }, 800 + 1000); // 800ms đóng + 1000ms delay
+
+          prevPathnameRef.current = pathname;
+          return () => {
+            clearTimeout(timer);
+          };
+        } else {
+          // Lần đầu mount: bắt đầu ở trạng thái đóng, sau đó mở ra
           setDisplayChildren(children);
-          // Sau khi transition hoàn tất (600ms mở ra), reset trạng thái
-          setTimeout(() => {
-            setShouldTransition(false);
-          }, 1000);
-        }, 1000 + 1000);
+          setTransitionMode("closed");
 
-        prevPathnameRef.current = pathname;
-        return () => {
-          clearTimeout(initTimer);
-          clearTimeout(timer);
-        };
+          // Sau 1s delay, mở page
+          setTimeout(() => {
+            setTransitionMode("opening");
+
+            setTimeout(() => {
+              setTransitionMode("none");
+            }, 800);
+          }, 1000);
+
+          prevPathnameRef.current = pathname;
+        }
       } else {
         // Pathname đã thay đổi nhưng có manual trigger, chỉ cập nhật children
         prevPathnameRef.current = pathname;
-        setTimeout(() => {
-          setDisplayChildren(children);
-        }, 0);
+        setDisplayChildren(children);
       }
     } else {
       // Cập nhật children mà không trigger transition
-      setTimeout(() => {
-        setDisplayChildren(children);
-      }, 0);
+      setDisplayChildren(children);
     }
   }, [pathname, children]);
 
   return (
-    <PageTransition isActive={shouldTransition}>
-      {displayChildren}
-    </PageTransition>
+    <PageTransition mode={transitionMode}>{displayChildren}</PageTransition>
   );
 }
 

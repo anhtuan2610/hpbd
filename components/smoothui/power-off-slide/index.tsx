@@ -171,13 +171,13 @@ export default function PowerOffSlide({
       // Trigger transition ngay lập tức
       triggerTransition();
 
-      // Navigate sau khi đóng vào xong + delay: đóng vào (600ms) + delay (1000ms) = 1600ms
+      // Navigate sau khi đóng vào xong + delay: đóng vào (800ms) + delay (500ms) = 1300ms
       // Navigate trước khi mở ra để nội dung mới được load
       setTimeout(() => {
         if (href) {
           router.push(href);
         }
-      }, 1600);
+      }, 1300);
     } else {
       controls.start({ x: 0 });
     }
