@@ -10,7 +10,7 @@ import CuteDoggie from "@/components/CuteDoggie";
 export default function Home() {
   return (
     <ClickSpark sparkColor="#ffb6c1" sparkCount={12} extraScale={4}>
-      <div className="relative h-screen w-full overflow-hidden bg-gradient-to-br from-sky-200 via-pink-100 to-purple-200">
+      <div className="relative h-screen w-full overflow-hidden bg-gradient-to-br from-sky-200 via-pink-100 to-purple-200 transition-colors duration-400">
         {/* Các icon bay lên */}
         <FloatingIconsField />
 
