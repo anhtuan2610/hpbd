@@ -217,7 +217,7 @@ export default function Page2() {
 
       {/* Nội dung màn hình mới */}
       <main className="relative z-10 flex h-full items-center justify-center">
-        <div className="relative flex flex-col items-center gap-8">
+        <div className="relative flex flex-col items-center gap-8 mb-15">
           {/* Mũi tên trỏ vào bánh kem (từ trên xuống) */}
           {candles.length === 0 && (
             <div className="absolute -top-30 left-20 -translate-x-1/2 pointer-events-none z-30">
@@ -307,14 +307,14 @@ export default function Page2() {
       {/* Nút Back */}
       <AnimatedLink
         href="/"
-        className="absolute bottom-8 left-8 z-20 rounded-full bg-pink-300  px-8 py-4 text-lg font-bold text-white shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-xl active:scale-95"
+        className="absolute bottom-10 left-8 z-20 rounded-full bg-pink-300  px-8 py-4 text-lg font-bold text-white shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-xl active:scale-95"
       >
         ← Back
       </AnimatedLink>
 
       {/* Nút bật microphone - chỉ hiển thị khi dark mode và không đang nghe */}
       {!isListening && !isLoading && resolvedTheme === "dark" && (
-        <div className="absolute bottom-9 right-8 z-20">
+        <div className="absolute bottom-11 right-8 z-20">
           <button
             onClick={startListening}
             className="bg-linear-to-r from-purple-500 via-pink-500 to-red-500 hover:from-purple-600 hover:via-pink-600 hover:to-red-600 text-white px-4 py-2.5 rounded-full shadow-lg font-semibold text-sm flex items-center gap-2 transition-all duration-300 hover:scale-105 active:scale-95 border border-white/20 backdrop-blur-sm"
