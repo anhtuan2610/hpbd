@@ -114,34 +114,85 @@ export function useBlowDetection(
       console.log("🎧 Bắt đầu phân tích audio...");
 
       // Hàm phân tích audio liên tục
+      let sustainedBlowCount = 0; // Đếm số frame liên tiếp có tiếng thổi
+      const MIN_SUSTAINED_FRAMES = 3; // Cần ít nhất 3 frame liên tiếp (khoảng 50ms) để xác nhận tiếng thổi
+      const MAX_SUSTAINED_FRAMES = 20; // Giới hạn để tránh false positive
+
       const analyze = () => {
         if (!analyserRef.current || !dataArrayRef.current) return;
 
         analyserRef.current.getByteFrequencyData(dataArrayRef.current as any);
 
-        // Tính toán tổng năng lượng ở tần số thấp (tiếng thổi thường ở 20-200Hz)
-        // Chỉ lấy 10 bin đầu tiên (tần số thấp)
-        let sum = 0;
-        const lowFreqBins = Math.min(10, dataArrayRef.current.length);
+        // Tính toán năng lượng ở các dải tần số khác nhau
+        const bufferLength = dataArrayRef.current.length;
+
+        // Dải tần số thấp (20-200Hz) - tiếng thổi chủ yếu ở đây
+        let lowFreqSum = 0;
+        const lowFreqBins = Math.min(15, bufferLength); // Tăng lên 15 bin
         for (let i = 0; i < lowFreqBins; i++) {
-          sum += dataArrayRef.current[i];
+          lowFreqSum += dataArrayRef.current[i];
         }
-        const average = sum / lowFreqBins / 255; // Normalize về 0-1
+        const lowFreqAvg = lowFreqSum / lowFreqBins / 255;
 
-        // Log giá trị để debug (chỉ log khi có âm thanh)
-        if (average > 0.1) {
-          console.log(`📊 Audio level: ${(average * 100).toFixed(2)}%`);
+        // Dải tần số trung (200-1000Hz) - tiếng động thông thường có nhiều ở đây
+        let midFreqSum = 0;
+        const midFreqStart = lowFreqBins;
+        const midFreqEnd = Math.min(lowFreqBins + 30, bufferLength);
+        for (let i = midFreqStart; i < midFreqEnd; i++) {
+          midFreqSum += dataArrayRef.current[i];
+        }
+        const midFreqAvg = midFreqSum / (midFreqEnd - midFreqStart) / 255;
+
+        // Dải tần số cao (1000Hz+) - tiếng động sắc thường có nhiều ở đây
+        let highFreqSum = 0;
+        const highFreqStart = midFreqEnd;
+        for (let i = highFreqStart; i < bufferLength; i++) {
+          highFreqSum += dataArrayRef.current[i];
+        }
+        const highFreqAvg = highFreqSum / (bufferLength - highFreqStart) / 255;
+
+        // Đặc điểm của tiếng thổi:
+        // 1. Năng lượng cao ở tần số thấp
+        // 2. Năng lượng thấp ở tần số trung và cao (khác với tiếng động thông thường)
+        // 3. Kéo dài (sustained) - không phải tiếng động ngắn
+
+        const isBlowPattern =
+          lowFreqAvg > threshold * sensitivity && // Tần số thấp cao
+          lowFreqAvg > midFreqAvg * 1.5 && // Tần số thấp cao hơn tần số trung ít nhất 1.5 lần
+          lowFreqAvg > highFreqAvg * 2 && // Tần số thấp cao hơn tần số cao ít nhất 2 lần
+          lowFreqAvg > 0.3; // Ngưỡng tối thiểu cao hơn (30% thay vì 15-20%)
+
+        // Log để debug
+        if (lowFreqAvg > 0.15) {
+          console.log(
+            `📊 Low: ${(lowFreqAvg * 100).toFixed(1)}% | Mid: ${(
+              midFreqAvg * 100
+            ).toFixed(1)}% | High: ${(highFreqAvg * 100).toFixed(
+              1
+            )}% | Pattern: ${isBlowPattern ? "✅" : "❌"}`
+          );
         }
 
-        // Phát hiện tiếng thổi: amplitude cao ở tần số thấp
-        const now = Date.now();
-        if (
-          average > threshold * sensitivity &&
-          now - lastBlowTimeRef.current > BLOW_COOLDOWN
-        ) {
-          lastBlowTimeRef.current = now;
-          console.log("💨 PHÁT HIỆN TIẾNG THỔI! (Blow detected!)");
-          onBlowDetected();
+        // Kiểm tra pattern tiếng thổi
+        if (isBlowPattern) {
+          sustainedBlowCount++;
+
+          // Chỉ phát hiện khi có pattern kéo dài (tránh false positive)
+          if (
+            sustainedBlowCount >= MIN_SUSTAINED_FRAMES &&
+            sustainedBlowCount <= MAX_SUSTAINED_FRAMES
+          ) {
+            const now = Date.now();
+            if (now - lastBlowTimeRef.current > BLOW_COOLDOWN) {
+              lastBlowTimeRef.current = now;
+              sustainedBlowCount = 0; // Reset sau khi phát hiện
+              console.log("💨 PHÁT HIỆN TIẾNG THỔI! (Blow detected!)");
+              onBlowDetected();
+            }
+          }
+        } else {
+          // Reset counter nếu không có pattern
+          sustainedBlowCount = Math.max(0, sustainedBlowCount - 1);
         }
 
         animationFrameRef.current = requestAnimationFrame(analyze);

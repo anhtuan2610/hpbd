@@ -36,6 +36,8 @@ export default function Page2() {
   };
 
   // Sử dụng hook phát hiện tiếng thổi
+  // threshold: 0.6 (cao hơn để ít nhạy hơn)
+  // sensitivity: 0.8 (cao hơn để cần tiếng to hơn)
   const {
     startListening,
     isListening,
@@ -43,7 +45,7 @@ export default function Page2() {
     error,
     isLoading,
     permissionStatus,
-  } = useBlowDetection(handleBlowDetected, 0.5, 0.7);
+  } = useBlowDetection(handleBlowDetected, 0.6, 0.8);
 
   // Force light mode on initial mount (only once)
   useEffect(() => {
