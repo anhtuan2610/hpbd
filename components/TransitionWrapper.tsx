@@ -38,8 +38,8 @@ function TransitionWrapperInner({ children }: TransitionWrapperInnerProps) {
           setShouldTransition(false);
           setIsTransitioning(false);
           isManualTransitionRef.current = false;
-        }, 600);
-      }, 600 + 1000);
+        }, 1000);
+      }, 1000 + 1000);
 
       return () => {
         clearTimeout(initTimer);
@@ -64,8 +64,8 @@ function TransitionWrapperInner({ children }: TransitionWrapperInnerProps) {
           // Sau khi transition hoàn tất (600ms mở ra), reset trạng thái
           setTimeout(() => {
             setShouldTransition(false);
-          }, 600);
-        }, 600 + 1000);
+          }, 1000);
+        }, 1000 + 1000);
 
         prevPathnameRef.current = pathname;
         return () => {
