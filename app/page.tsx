@@ -62,7 +62,7 @@ export default function Home() {
           <div
             className="w-full bg-gradient-to-t from-green-600 to-green-500"
             style={{
-              height: "60px",
+              height: "160px",
             }}
           />
 

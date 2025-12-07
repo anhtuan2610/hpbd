@@ -96,7 +96,7 @@ export default function CuteDoggie() {
   return (
     <div
       ref={containerRef}
-      className="absolute bottom-0 left-0 right-0 z-15 pointer-events-none"
+      className="absolute bottom-20 left-0 right-0 z-15 pointer-events-none"
     >
       {/* Ô chat trên đầu con chó - không bị flip, di chuyển cùng con chó */}
       <motion.div

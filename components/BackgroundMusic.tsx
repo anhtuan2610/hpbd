@@ -14,7 +14,10 @@ export default function BackgroundMusic() {
           await audioRef.current.play();
           console.log("Background music playing successfully");
         } catch (error) {
-          console.log("Auto-play was prevented. Will play on first user interaction:", error);
+          console.log(
+            "Auto-play was prevented. Will play on first user interaction:",
+            error
+          );
         }
       }
     };
@@ -36,9 +39,15 @@ export default function BackgroundMusic() {
 
     // Listen for various user interactions
     document.addEventListener("click", handleFirstInteraction, { once: true });
-    document.addEventListener("touchstart", handleFirstInteraction, { once: true });
-    document.addEventListener("keydown", handleFirstInteraction, { once: true });
-    document.addEventListener("mousedown", handleFirstInteraction, { once: true });
+    document.addEventListener("touchstart", handleFirstInteraction, {
+      once: true,
+    });
+    document.addEventListener("keydown", handleFirstInteraction, {
+      once: true,
+    });
+    document.addEventListener("mousedown", handleFirstInteraction, {
+      once: true,
+    });
 
     return () => {
       document.removeEventListener("click", handleFirstInteraction);
@@ -51,7 +60,7 @@ export default function BackgroundMusic() {
   return (
     <audio
       ref={audioRef}
-      src="/nhacsinhnhat.m4a"
+      src="/spring-day.m4a"
       loop
       preload="auto"
       className="hidden"
@@ -67,4 +76,3 @@ export default function BackgroundMusic() {
     />
   );
 }
-
