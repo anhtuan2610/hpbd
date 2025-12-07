@@ -10,6 +10,10 @@ import ThemeButton from "@/components/ThemeButton";
 import FireAnimation from "@/components/FireAnimation";
 import { StarsBackground } from "@/components/animate-ui/components/backgrounds/stars";
 import { useBlowDetection } from "@/hooks/useBlowDetection";
+import {
+  Progress,
+  ProgressIndicator,
+} from "@/components/animate-ui/primitives/radix/progress";
 
 type CandlePosition = {
   id: number;
@@ -45,8 +49,8 @@ export default function Page2() {
   };
 
   // Sử dụng hook phát hiện tiếng thổi
-  // threshold: 0.5 (giảm xuống để dễ detect hơn)
-  // sensitivity: 0.7 (giảm xuống để dễ detect hơn)
+  // threshold: 0.65 (cân bằng - không quá dễ, không quá khó)
+  // sensitivity: 0.75 (cân bằng)
   // canTrigger: chỉ trigger khi đã xác nhận lần thổi trước
   const {
     startListening,
@@ -55,7 +59,8 @@ export default function Page2() {
     error,
     isLoading,
     permissionStatus,
-  } = useBlowDetection(handleBlowDetected, 0.5, 0.7, () => isBlowConfirmed);
+    blowProgress, // Lấy progress để hiển thị
+  } = useBlowDetection(handleBlowDetected, 0.65, 0.75, () => isBlowConfirmed);
 
   // Force light mode on initial mount (only once)
   useEffect(() => {
@@ -196,12 +201,32 @@ export default function Page2() {
 
       {/* Hiển thị trạng thái đang nghe - chỉ hiển thị khi dark mode */}
       {isListening && hasPermission && resolvedTheme === "dark" && (
-        <div className="fixed top-4 right-4 z-30 bg-linear-to-r from-green-500 to-emerald-600 text-white px-6 py-4 rounded-2xl shadow-2xl font-bold text-sm border-2 border-white/30 backdrop-blur-sm">
-          <div className="flex items-center gap-3">
-            <span className="text-3xl animate-pulse">💨</span>
-            <span className="bg-white/20 px-4 py-2 rounded-full">
-              Đang nghe... Hãy thổi vào microphone!
-            </span>
+        <div className="fixed top-4 right-4 z-30 bg-linear-to-r from-green-500 to-emerald-600 text-white px-6 py-4 rounded-2xl shadow-2xl font-bold text-sm border-2 border-white/30 backdrop-blur-sm min-w-[320px]">
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center gap-3">
+              <span className="text-3xl animate-pulse">💨</span>
+              <span className="bg-white/20 px-4 py-2 rounded-full">
+                Đang nghe... Hãy thổi vào microphone!
+              </span>
+            </div>
+            {/* Progress bar */}
+            <div className="w-full">
+              <Progress
+                value={blowProgress}
+                className="h-3 bg-white/20 rounded-full overflow-hidden relative"
+              >
+                <ProgressIndicator
+                  className="h-full w-full rounded-full"
+                  style={{
+                    background:
+                      "linear-gradient(90deg, #fbbf24, #f59e0b, #ef4444)",
+                  }}
+                />
+              </Progress>
+              <div className="text-xs mt-1 text-center opacity-90">
+                {Math.round(blowProgress)}% - Thổi mạnh hơn!
+              </div>
+            </div>
           </div>
         </div>
       )}

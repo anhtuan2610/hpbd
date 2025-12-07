@@ -117,7 +117,7 @@ export function useBlowDetection(
       console.log("🎧 Bắt đầu phân tích audio...");
 
       // Hàm phân tích audio liên tục với thanh progress
-      const PROGRESS_FRAMES_NEEDED = 30; // Cần 30 frame (khoảng 500ms) để đầy thanh
+      const PROGRESS_FRAMES_NEEDED = 60; // Cần 60 frame (khoảng 1s) để đầy thanh - cân bằng
       progressRef.current = 0; // Reset progress khi bắt đầu
 
       const analyze = () => {
@@ -153,16 +153,16 @@ export function useBlowDetection(
         }
         const highFreqAvg = highFreqSum / (bufferLength - highFreqStart) / 255;
 
-        // Đặc điểm của tiếng thổi (giảm độ khó):
+        // Đặc điểm của tiếng thổi (cân bằng):
         // 1. Năng lượng cao ở tần số thấp
-        // 2. Năng lượng thấp ở tần số trung và cao (nhưng giảm yêu cầu)
-        // 3. Ngưỡng thấp hơn để dễ detect hơn
+        // 2. Năng lượng thấp ở tần số trung và cao
+        // 3. Ngưỡng vừa phải để yêu cầu thổi mạnh nhưng không quá khó
 
         const isBlowPattern =
-          lowFreqAvg > threshold * sensitivity * 0.7 && // Giảm ngưỡng xuống 70%
-          lowFreqAvg > midFreqAvg * 1.2 && // Giảm từ 1.5 xuống 1.2
-          lowFreqAvg > highFreqAvg * 1.5 && // Giảm từ 2 xuống 1.5
-          lowFreqAvg > 0.2; // Giảm từ 0.3 xuống 0.2 (20%)
+          lowFreqAvg > threshold * sensitivity * 0.8 && // 80% của threshold*sensitivity
+          lowFreqAvg > midFreqAvg * 1.35 && // Yêu cầu vừa phải
+          lowFreqAvg > highFreqAvg * 1.7 && // Yêu cầu vừa phải
+          lowFreqAvg > 0.22; // 22% - ngưỡng vừa phải
 
         // Tính progress dựa trên pattern
         if (isBlowPattern) {
@@ -172,8 +172,8 @@ export function useBlowDetection(
             progressRef.current + 100 / PROGRESS_FRAMES_NEEDED
           );
         } else {
-          // Giảm progress khi không có pattern (decay chậm)
-          progressRef.current = Math.max(0, progressRef.current - 2);
+          // Giảm progress khi không có pattern (decay vừa phải)
+          progressRef.current = Math.max(0, progressRef.current - 2.5);
         }
 
         // Cập nhật progress state
