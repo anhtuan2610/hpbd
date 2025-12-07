@@ -49,8 +49,8 @@ export default function Page2() {
   };
 
   // Sử dụng hook phát hiện tiếng thổi
-  // threshold: 0.65 (cân bằng - không quá dễ, không quá khó)
-  // sensitivity: 0.75 (cân bằng)
+  // threshold: 0.4 (thấp hơn cho mobile - dễ phát hiện)
+  // sensitivity: 0.6 (thấp hơn cho mobile - dễ phát hiện)
   // canTrigger: chỉ trigger khi đã xác nhận lần thổi trước
   const {
     startListening,
@@ -60,7 +60,7 @@ export default function Page2() {
     isLoading,
     permissionStatus,
     blowProgress, // Lấy progress để hiển thị
-  } = useBlowDetection(handleBlowDetected, 0.65, 0.75, () => isBlowConfirmed);
+  } = useBlowDetection(handleBlowDetected, 0.4, 0.6, () => isBlowConfirmed);
 
   // Force light mode on initial mount (only once)
   useEffect(() => {

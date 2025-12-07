@@ -117,7 +117,7 @@ export function useBlowDetection(
       console.log("🎧 Bắt đầu phân tích audio...");
 
       // Hàm phân tích audio liên tục với thanh progress
-      const PROGRESS_FRAMES_NEEDED = 60; // Cần 60 frame (khoảng 1s) để đầy thanh - cân bằng
+      const PROGRESS_FRAMES_NEEDED = 40; // Cần 40 frame (khoảng 0.7s) để đầy thanh - nhạy hơn cho mobile
       progressRef.current = 0; // Reset progress khi bắt đầu
 
       const analyze = () => {
@@ -153,16 +153,16 @@ export function useBlowDetection(
         }
         const highFreqAvg = highFreqSum / (bufferLength - highFreqStart) / 255;
 
-        // Đặc điểm của tiếng thổi (cân bằng):
+        // Đặc điểm của tiếng thổi (tối ưu cho mobile):
         // 1. Năng lượng cao ở tần số thấp
-        // 2. Năng lượng thấp ở tần số trung và cao
-        // 3. Ngưỡng vừa phải để yêu cầu thổi mạnh nhưng không quá khó
+        // 2. Năng lượng thấp ở tần số trung và cao (nhưng linh hoạt hơn)
+        // 3. Ngưỡng thấp để dễ phát hiện trên mobile
 
         const isBlowPattern =
-          lowFreqAvg > threshold * sensitivity * 0.8 && // 80% của threshold*sensitivity
-          lowFreqAvg > midFreqAvg * 1.35 && // Yêu cầu vừa phải
-          lowFreqAvg > highFreqAvg * 1.7 && // Yêu cầu vừa phải
-          lowFreqAvg > 0.22; // 22% - ngưỡng vừa phải
+          lowFreqAvg > threshold * sensitivity * 0.5 && // 50% của threshold*sensitivity - nhạy hơn
+          (lowFreqAvg > midFreqAvg * 1.1 || lowFreqAvg > 0.15) && // Linh hoạt: chỉ cần 1.1x hoặc >15%
+          (lowFreqAvg > highFreqAvg * 1.2 || lowFreqAvg > 0.15) && // Linh hoạt: chỉ cần 1.2x hoặc >15%
+          lowFreqAvg > 0.12; // 12% - ngưỡng thấp cho mobile
 
         // Tính progress dựa trên pattern
         if (isBlowPattern) {
@@ -172,8 +172,8 @@ export function useBlowDetection(
             progressRef.current + 100 / PROGRESS_FRAMES_NEEDED
           );
         } else {
-          // Giảm progress khi không có pattern (decay vừa phải)
-          progressRef.current = Math.max(0, progressRef.current - 2.5);
+          // Giảm progress khi không có pattern (decay chậm để giữ progress tốt hơn)
+          progressRef.current = Math.max(0, progressRef.current - 1.5);
         }
 
         // Cập nhật progress state
