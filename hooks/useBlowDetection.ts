@@ -29,10 +29,24 @@ export function useBlowDetection(
       setIsLoading(true);
       console.log("🎤 Đang yêu cầu quyền truy cập microphone...");
 
+      // Kiểm tra secure context (HTTPS hoặc localhost)
+      const isSecureContext =
+        location.protocol === "https:" ||
+        location.hostname === "localhost" ||
+        location.hostname === "127.0.0.1" ||
+        location.hostname === "[::1]";
+
+      if (!isSecureContext) {
+        // Khi truy cập qua IP network (192.168.x.x), không phải secure context
+        // Trình duyệt sẽ không cho phép truy cập microphone
+        throw new Error(
+          `Microphone yêu cầu HTTPS hoặc localhost để hoạt động.\n\nBạn đang truy cập qua: ${location.protocol}//${location.hostname}\n\nGiải pháp:\n1. Truy cập qua localhost: http://localhost:3000\n2. Hoặc dùng HTTPS (khi deploy)\n3. Hoặc cấu hình HTTPS cho local development`
+        );
+      }
+
       // Kiểm tra xem trình duyệt có hỗ trợ getUserMedia không
       // Hỗ trợ cả API mới (mediaDevices.getUserMedia) và API cũ (navigator.getUserMedia)
       const nav = navigator as any;
-      console.log("navigator.getUserMedia:", nav.getUserMedia);
       const getUserMedia =
         navigator.mediaDevices?.getUserMedia ||
         nav.getUserMedia ||
@@ -43,15 +57,6 @@ export function useBlowDetection(
         throw new Error(
           "Trình duyệt không hỗ trợ microphone. Vui lòng dùng Chrome, Firefox hoặc Safari."
         );
-      }
-
-      // Kiểm tra xem có phải HTTPS hoặc localhost không (chỉ cảnh báo, không chặn)
-      if (
-        location.protocol !== "https:" &&
-        location.hostname !== "localhost" &&
-        location.hostname !== "127.0.0.1"
-      ) {
-        console.warn("⚠️ Cảnh báo: Có thể cần HTTPS để truy cập microphone.");
       }
 
       // Yêu cầu quyền truy cập microphone
