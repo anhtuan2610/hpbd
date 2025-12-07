@@ -11,6 +11,7 @@ export function useBlowDetection(
   const [hasPermission, setHasPermission] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [blowProgress, setBlowProgress] = useState(0); // Tiến độ thổi (0-100)
   const [permissionStatus, setPermissionStatus] = useState<
     "prompt" | "granted" | "denied" | "unknown"
   >("unknown");
@@ -21,6 +22,7 @@ export function useBlowDetection(
   const animationFrameRef = useRef<number | null>(null);
   const dataArrayRef = useRef<Uint8Array | null>(null);
   const lastBlowTimeRef = useRef<number>(0);
+  const progressRef = useRef<number>(0); // Dùng ref để track progress
   const BLOW_COOLDOWN = 500; // Cooldown 500ms để tránh spam
 
   const startListening = async () => {
@@ -113,10 +115,9 @@ export function useBlowDetection(
 
       console.log("🎧 Bắt đầu phân tích audio...");
 
-      // Hàm phân tích audio liên tục
-      let sustainedBlowCount = 0; // Đếm số frame liên tiếp có tiếng thổi
-      const MIN_SUSTAINED_FRAMES = 3; // Cần ít nhất 3 frame liên tiếp (khoảng 50ms) để xác nhận tiếng thổi
-      const MAX_SUSTAINED_FRAMES = 20; // Giới hạn để tránh false positive
+      // Hàm phân tích audio liên tục với thanh progress
+      const PROGRESS_FRAMES_NEEDED = 30; // Cần 30 frame (khoảng 500ms) để đầy thanh
+      progressRef.current = 0; // Reset progress khi bắt đầu
 
       const analyze = () => {
         if (!analyserRef.current || !dataArrayRef.current) return;
@@ -128,7 +129,7 @@ export function useBlowDetection(
 
         // Dải tần số thấp (20-200Hz) - tiếng thổi chủ yếu ở đây
         let lowFreqSum = 0;
-        const lowFreqBins = Math.min(15, bufferLength); // Tăng lên 15 bin
+        const lowFreqBins = Math.min(15, bufferLength);
         for (let i = 0; i < lowFreqBins; i++) {
           lowFreqSum += dataArrayRef.current[i];
         }
@@ -151,48 +152,53 @@ export function useBlowDetection(
         }
         const highFreqAvg = highFreqSum / (bufferLength - highFreqStart) / 255;
 
-        // Đặc điểm của tiếng thổi:
+        // Đặc điểm của tiếng thổi (giảm độ khó):
         // 1. Năng lượng cao ở tần số thấp
-        // 2. Năng lượng thấp ở tần số trung và cao (khác với tiếng động thông thường)
-        // 3. Kéo dài (sustained) - không phải tiếng động ngắn
+        // 2. Năng lượng thấp ở tần số trung và cao (nhưng giảm yêu cầu)
+        // 3. Ngưỡng thấp hơn để dễ detect hơn
 
         const isBlowPattern =
-          lowFreqAvg > threshold * sensitivity && // Tần số thấp cao
-          lowFreqAvg > midFreqAvg * 1.5 && // Tần số thấp cao hơn tần số trung ít nhất 1.5 lần
-          lowFreqAvg > highFreqAvg * 2 && // Tần số thấp cao hơn tần số cao ít nhất 2 lần
-          lowFreqAvg > 0.3; // Ngưỡng tối thiểu cao hơn (30% thay vì 15-20%)
+          lowFreqAvg > threshold * sensitivity * 0.7 && // Giảm ngưỡng xuống 70%
+          lowFreqAvg > midFreqAvg * 1.2 && // Giảm từ 1.5 xuống 1.2
+          lowFreqAvg > highFreqAvg * 1.5 && // Giảm từ 2 xuống 1.5
+          lowFreqAvg > 0.2; // Giảm từ 0.3 xuống 0.2 (20%)
+
+        // Tính progress dựa trên pattern
+        if (isBlowPattern) {
+          // Tăng progress khi có pattern
+          progressRef.current = Math.min(
+            100,
+            progressRef.current + 100 / PROGRESS_FRAMES_NEEDED
+          );
+        } else {
+          // Giảm progress khi không có pattern (decay chậm)
+          progressRef.current = Math.max(0, progressRef.current - 2);
+        }
+
+        // Cập nhật progress state
+        setBlowProgress(progressRef.current);
 
         // Log để debug
-        if (lowFreqAvg > 0.15) {
+        if (lowFreqAvg > 0.1) {
           console.log(
-            `📊 Low: ${(lowFreqAvg * 100).toFixed(1)}% | Mid: ${(
-              midFreqAvg * 100
-            ).toFixed(1)}% | High: ${(highFreqAvg * 100).toFixed(
+            `📊 Low: ${(lowFreqAvg * 100).toFixed(
               1
-            )}% | Pattern: ${isBlowPattern ? "✅" : "❌"}`
+            )}% | Progress: ${progressRef.current.toFixed(1)}% | Pattern: ${
+              isBlowPattern ? "✅" : "❌"
+            }`
           );
         }
 
-        // Kiểm tra pattern tiếng thổi
-        if (isBlowPattern) {
-          sustainedBlowCount++;
-
-          // Chỉ phát hiện khi có pattern kéo dài (tránh false positive)
-          if (
-            sustainedBlowCount >= MIN_SUSTAINED_FRAMES &&
-            sustainedBlowCount <= MAX_SUSTAINED_FRAMES
-          ) {
-            const now = Date.now();
-            if (now - lastBlowTimeRef.current > BLOW_COOLDOWN) {
-              lastBlowTimeRef.current = now;
-              sustainedBlowCount = 0; // Reset sau khi phát hiện
-              console.log("💨 PHÁT HIỆN TIẾNG THỔI! (Blow detected!)");
-              onBlowDetected();
-            }
+        // Khi progress đạt 100%, trigger success
+        if (progressRef.current >= 100) {
+          const now = Date.now();
+          if (now - lastBlowTimeRef.current > BLOW_COOLDOWN) {
+            lastBlowTimeRef.current = now;
+            progressRef.current = 0; // Reset progress
+            setBlowProgress(0);
+            console.log("💨 PHÁT HIỆN TIẾNG THỔI! (Blow detected!)");
+            onBlowDetected();
           }
-        } else {
-          // Reset counter nếu không có pattern
-          sustainedBlowCount = Math.max(0, sustainedBlowCount - 1);
         }
 
         animationFrameRef.current = requestAnimationFrame(analyze);
@@ -268,5 +274,6 @@ export function useBlowDetection(
     error,
     isLoading,
     permissionStatus,
+    blowProgress, // Trả về progress để hiển thị UI
   };
 }

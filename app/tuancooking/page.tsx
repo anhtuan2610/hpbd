@@ -36,8 +36,8 @@ export default function Page2() {
   };
 
   // Sử dụng hook phát hiện tiếng thổi
-  // threshold: 0.6 (cao hơn để ít nhạy hơn)
-  // sensitivity: 0.8 (cao hơn để cần tiếng to hơn)
+  // threshold: 0.5 (giảm xuống để dễ detect hơn)
+  // sensitivity: 0.7 (giảm xuống để dễ detect hơn)
   const {
     startListening,
     isListening,
@@ -45,7 +45,8 @@ export default function Page2() {
     error,
     isLoading,
     permissionStatus,
-  } = useBlowDetection(handleBlowDetected, 0.6, 0.8);
+    blowProgress,
+  } = useBlowDetection(handleBlowDetected, 0.5, 0.7);
 
   // Force light mode on initial mount (only once)
   useEffect(() => {
@@ -174,11 +175,31 @@ export default function Page2() {
         </div>
       )}
 
-      {/* Hiển thị trạng thái đang nghe */}
+      {/* Hiển thị trạng thái đang nghe và thanh progress */}
       {isListening && hasPermission && (
-        <div className="fixed top-4 right-4 z-30 bg-green-500 text-white px-6 py-3 rounded-full shadow-lg font-bold text-lg flex items-center gap-2 animate-pulse">
-          <span className="text-2xl">🎧</span>
-          <span>Đang nghe...</span>
+        <div className="fixed top-4 right-4 z-30 bg-green-500 text-white px-6 py-3 rounded-2xl shadow-lg font-bold text-sm">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-2xl">🎧</span>
+            <span>Đang nghe... Hãy thổi vào microphone!</span>
+          </div>
+          {/* Thanh progress */}
+          <div className="w-full bg-white/30 rounded-full h-4 overflow-hidden">
+            <div
+              className="h-full bg-white transition-all duration-100 ease-out rounded-full flex items-center justify-center"
+              style={{ width: `${blowProgress}%` }}
+            >
+              {blowProgress > 10 && (
+                <span className="text-xs font-bold text-green-600">
+                  {Math.round(blowProgress)}%
+                </span>
+              )}
+            </div>
+          </div>
+          {blowProgress > 0 && blowProgress < 100 && (
+            <div className="text-xs mt-1 text-center">
+              Tiếp tục thổi... {Math.round(blowProgress)}%
+            </div>
+          )}
         </div>
       )}
 
