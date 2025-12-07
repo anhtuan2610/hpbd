@@ -21,46 +21,58 @@ function TransitionWrapperInner({ children }: TransitionWrapperInnerProps) {
     "closing" | "opening" | "closed" | "none"
   >("closed"); // Bắt đầu ở trạng thái đóng
   const isManualTransitionRef = useRef(false);
+  const manualTransitionStartTimeRef = useRef<number | null>(null);
 
   // Listen to manual transition trigger (từ slide button)
   useEffect(() => {
     if (isTransitioning) {
       // Đánh dấu manual trigger ngay lập tức
       isManualTransitionRef.current = true;
+      manualTransitionStartTimeRef.current = Date.now();
 
       // Đóng page hiện tại
       setTransitionMode("closing");
-
-      // Sau 800ms (đóng xong) + 1000ms delay, navigate và mở page mới
-      const timer = setTimeout(() => {
-        setDisplayChildren(children);
-        // Page mới bắt đầu ở trạng thái đóng
-        setTransitionMode("closed");
-
-        // Sau 1s delay, mở page mới
-        setTimeout(() => {
-          setTransitionMode("opening");
-
-          // Sau khi mở xong, reset
-          setTimeout(() => {
-            setTransitionMode("none");
-            setIsTransitioning(false);
-            isManualTransitionRef.current = false;
-          }, 800);
-        }, 1000);
-      }, 800);
-
-      return () => {
-        clearTimeout(timer);
-      };
     }
-  }, [isTransitioning, children, setIsTransitioning]);
+  }, [isTransitioning]);
 
   // Trigger transition tự động khi pathname thay đổi (back/forward navigation)
   useEffect(() => {
     if (prevPathnameRef.current !== pathname) {
-      // Nếu không có manual trigger đang chạy
-      if (!isManualTransitionRef.current) {
+      // Nếu có manual trigger đang chạy (từ slide button)
+      if (isManualTransitionRef.current) {
+        // Đã đóng page cũ rồi (từ useEffect manual transition)
+        // Đảm bảo transition đóng đã hoàn thành (800ms) trước khi cập nhật children
+        const elapsed = manualTransitionStartTimeRef.current
+          ? Date.now() - manualTransitionStartTimeRef.current
+          : 0;
+        const remainingCloseTime = Math.max(0, 800 - elapsed);
+
+        const timer = setTimeout(() => {
+          // Bây giờ pathname đã thay đổi, cập nhật children và mở page mới
+          setDisplayChildren(children);
+          // Page mới bắt đầu ở trạng thái đóng
+          setTransitionMode("closed");
+
+          // Sau 1s delay, mở page mới
+          setTimeout(() => {
+            setTransitionMode("opening");
+
+            // Sau khi mở xong, reset
+            setTimeout(() => {
+              setTransitionMode("none");
+              setIsTransitioning(false);
+              isManualTransitionRef.current = false;
+              manualTransitionStartTimeRef.current = null;
+            }, 800);
+          }, 1000);
+        }, remainingCloseTime);
+
+        prevPathnameRef.current = pathname;
+        return () => {
+          clearTimeout(timer);
+        };
+      } else {
+        // Không có manual trigger - tự động transition (back/forward navigation)
         // Nếu đã có page trước đó, đóng page cũ trước
         if (prevPathnameRef.current !== null) {
           setTransitionMode("closing");
@@ -102,16 +114,12 @@ function TransitionWrapperInner({ children }: TransitionWrapperInnerProps) {
 
           prevPathnameRef.current = pathname;
         }
-      } else {
-        // Pathname đã thay đổi nhưng có manual trigger, chỉ cập nhật children
-        prevPathnameRef.current = pathname;
-        setDisplayChildren(children);
       }
     } else {
       // Cập nhật children mà không trigger transition
       setDisplayChildren(children);
     }
-  }, [pathname, children]);
+  }, [pathname, children, setIsTransitioning]);
 
   return (
     <PageTransition mode={transitionMode}>{displayChildren}</PageTransition>
