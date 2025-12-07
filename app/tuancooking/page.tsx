@@ -6,8 +6,9 @@ import ClickSpark from "@/components/ClickSpark";
 import AnimatedLink from "@/components/AnimatedLink";
 import CakeSvg from "@/components/CakeSvg";
 import CandleSvg from "@/components/CandleSvg";
-import { AnimatedThemeToggler } from "@/components/ui/animated-theme-toggler";
 import ThemeButton from "@/components/ThemeButton";
+import FireAnimation from "@/components/FireAnimation";
+import { StarsBackground } from "@/components/animate-ui/components/backgrounds/stars";
 
 type CandlePosition = {
   id: number;
@@ -57,66 +58,83 @@ export default function Page2() {
       ? ""
       : "bg-gradient-to-br from-sky-200 via-pink-100 to-purple-200";
 
+  const content = (
+    <>
+      {/* Các icon bay lên */}
+      {/* <FloatingIconsField /> */}
+
+      {/* Nội dung màn hình mới */}
+      <main className="relative z-10 flex h-full items-center justify-center">
+        <div className="relative">
+          <CakeSvg />
+          {/* Border để xác định bề mặt bánh kem */}
+          <div
+            className="absolute rounded-full flex items-center justify-center cursor-pointer"
+            style={{
+              width: "80%",
+              height: "clamp(25%, 30vh, 35%)",
+              top: "0%",
+              left: "50%",
+              transform: "translateX(-50%)",
+            }}
+            onClick={handleCakeSurfaceClick}
+          >
+            {/* Render các cây nến đã được thêm */}
+            {candles.map((candle) => (
+              <div
+                key={candle.id}
+                className="absolute"
+                style={{
+                  left: `${candle.x}%`,
+                  top: `${candle.y}%`,
+                  transform: "translate(-50%, -50%)",
+                }}
+              >
+                <div className="relative w-4 md:w-6">
+                  <CandleSvg hideFlameHeight={50} />
+                  {resolvedTheme === "dark" && <FireAnimation />}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </main>
+
+      {/* Nút Back */}
+      <AnimatedLink
+        href="/"
+        className="absolute bottom-8 left-8 z-20 rounded-full bg-pink-300  px-8 py-4 text-lg font-bold text-white shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-xl active:scale-95"
+      >
+        ← Back
+      </AnimatedLink>
+
+      {/* Theme Toggler ở giữa màn hình, hơi bên trên */}
+      <div className="absolute top-[15%] left-1/2 -translate-x-1/2 z-20">
+        {/* <AnimatedThemeToggler className="rounded-full bg-white/80 dark:bg-gray-800/80 p-3 shadow-lg hover:bg-white dark:hover:bg-gray-800 transition-colors" /> */}
+        <ThemeButton />
+      </div>
+    </>
+  );
+
   return (
     <ClickSpark sparkColor="#ffb6c1" sparkCount={12} extraScale={4}>
-      <div
-        className={`relative h-screen w-full overflow-hidden transition-colors duration-400 ${backgroundClass}`}
-        style={backgroundColor ? { backgroundColor } : undefined}
-      >
-        {/* Các icon bay lên */}
-        {/* <FloatingIconsField /> */}
-
-        {/* Nội dung màn hình mới */}
-        <main className="relative z-10 flex h-full items-center justify-center">
-          <div className="relative">
-            <CakeSvg />
-            {/* Border để xác định bề mặt bánh kem */}
-            <div
-              className="absolute rounded-full flex items-center justify-center cursor-pointer"
-              style={{
-                width: "80%",
-                height: "clamp(25%, 30vh, 35%)",
-                top: "0%",
-                left: "50%",
-                transform: "translateX(-50%)",
-              }}
-              onClick={handleCakeSurfaceClick}
-            >
-              {/* Render các cây nến đã được thêm */}
-              {candles.map((candle) => (
-                <div
-                  key={candle.id}
-                  className="absolute"
-                  style={{
-                    left: `${candle.x}%`,
-                    top: `${candle.y}%`,
-                    transform: "translate(-50%, -50%)",
-                  }}
-                >
-                  <div className="relative w-4 md:w-6">
-                    <CandleSvg hideFlameHeight={50} />
-                    {/* <FireAnimation /> */}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </main>
-
-        {/* Nút Back */}
-        <AnimatedLink
-          href="/"
-          className="absolute bottom-8 left-8 z-20 rounded-full bg-pink-300  px-8 py-4 text-lg font-bold text-white shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-xl active:scale-95"
+      {resolvedTheme === "dark" ? (
+        <StarsBackground
+          className="relative h-screen w-full overflow-hidden"
+          speed={50}
+          starColor="#fff"
+          pointerEvents={false}
         >
-          ← Back
-        </AnimatedLink>
-
-        {/* Theme Toggler ở giữa màn hình, hơi bên trên */}
-        <div className="absolute top-[15%] left-1/2 -translate-x-1/2 z-20">
-          {/* <AnimatedThemeToggler className="rounded-full bg-white/80 dark:bg-gray-800/80 p-3 shadow-lg hover:bg-white dark:hover:bg-gray-800 transition-colors" /> */}
-          <ThemeButton />
+          {content}
+        </StarsBackground>
+      ) : (
+        <div
+          className={`relative h-screen w-full overflow-hidden transition-colors duration-400 ${backgroundClass}`}
+          style={backgroundColor ? { backgroundColor } : undefined}
+        >
+          {content}
         </div>
-      </div>
+      )}
     </ClickSpark>
   );
 }

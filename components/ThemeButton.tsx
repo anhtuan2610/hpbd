@@ -80,7 +80,7 @@ const ThemeButton = () => {
             setTheme(newTheme);
           });
         });
-      }, 400); // 400ms delay to let button animation complete
+      }, 500); // 400ms delay to let button animation complete
     },
     [setTheme, isDisabled]
   );

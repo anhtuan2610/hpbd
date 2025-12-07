@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import TransitionWrapper from "@/components/TransitionWrapper";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import BackgroundMusic from "@/components/BackgroundMusic";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -35,6 +36,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          <BackgroundMusic />
           <TransitionWrapper>{children}</TransitionWrapper>
         </ThemeProvider>
       </body>
