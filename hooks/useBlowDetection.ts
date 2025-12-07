@@ -11,6 +11,9 @@ export function useBlowDetection(
   const [hasPermission, setHasPermission] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [permissionStatus, setPermissionStatus] = useState<
+    "prompt" | "granted" | "denied" | "unknown"
+  >("unknown");
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const microphoneRef = useRef<MediaStreamAudioSourceNode | null>(null);
@@ -25,7 +28,6 @@ export function useBlowDetection(
       setError(null);
       setIsLoading(true);
       console.log("🎤 Đang yêu cầu quyền truy cập microphone...");
-      console.log("navigator.mediaDevices:", navigator.mediaDevices);
 
       // Kiểm tra xem trình duyệt có hỗ trợ getUserMedia không
       // Hỗ trợ cả API mới (mediaDevices.getUserMedia) và API cũ (navigator.getUserMedia)
@@ -152,8 +154,9 @@ export function useBlowDetection(
         err.name === "NotAllowedError" ||
         err.name === "PermissionDeniedError"
       ) {
+        setPermissionStatus("denied");
         setError(
-          "Bạn đã từ chối quyền truy cập microphone. Vui lòng cho phép trong cài đặt trình duyệt."
+          "Bạn đã từ chối quyền truy cập microphone. Vui lòng click vào icon 🔒 hoặc 🎤 ở thanh địa chỉ trình duyệt và cho phép microphone, sau đó làm mới trang."
         );
       } else if (
         err.name === "NotFoundError" ||
@@ -208,5 +211,6 @@ export function useBlowDetection(
     hasPermission,
     error,
     isLoading,
+    permissionStatus,
   };
 }

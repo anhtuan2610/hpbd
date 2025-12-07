@@ -36,8 +36,14 @@ export default function Page2() {
   };
 
   // Sử dụng hook phát hiện tiếng thổi
-  const { startListening, isListening, hasPermission, error, isLoading } =
-    useBlowDetection(handleBlowDetected, 0.5, 0.7);
+  const {
+    startListening,
+    isListening,
+    hasPermission,
+    error,
+    isLoading,
+    permissionStatus,
+  } = useBlowDetection(handleBlowDetected, 0.5, 0.7);
 
   // Force light mode on initial mount (only once)
   useEffect(() => {
@@ -176,19 +182,31 @@ export default function Page2() {
 
       {/* Hiển thị lỗi */}
       {error && (
-        <div className="fixed top-4 right-4 z-30 bg-red-500 text-white px-6 py-4 rounded-2xl shadow-lg font-bold text-sm max-w-xs">
+        <div className="fixed top-4 right-4 z-30 bg-red-500 text-white px-6 py-4 rounded-2xl shadow-lg font-bold text-sm max-w-sm">
           <div className="flex items-start gap-2">
             <span className="text-2xl">⚠️</span>
-            <div>
-              <div className="font-bold mb-1">Lỗi:</div>
-              <div className="text-xs">{error}</div>
+            <div className="flex-1">
+              <div className="font-bold mb-2">Lỗi:</div>
+              <div className="text-xs whitespace-pre-line leading-relaxed">
+                {error}
+              </div>
+              {permissionStatus === "denied" && (
+                <button
+                  onClick={() => {
+                    window.location.reload();
+                  }}
+                  className="mt-3 bg-white text-red-500 px-4 py-2 rounded-lg text-xs font-bold hover:bg-gray-100 transition-colors"
+                >
+                  🔄 Làm mới trang
+                </button>
+              )}
             </div>
             <button
               onClick={() => {
-                // Clear error by trying again
-                startListening();
+                // Đóng thông báo lỗi (error sẽ được clear khi thử lại)
+                window.location.reload();
               }}
-              className="ml-2 text-white hover:text-gray-200"
+              className="ml-2 text-white hover:text-gray-200 text-xl"
             >
               ✕
             </button>
