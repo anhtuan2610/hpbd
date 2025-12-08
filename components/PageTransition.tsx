@@ -6,45 +6,58 @@ import Image from "next/image";
 
 type PageTransitionProps = {
   children: React.ReactNode;
-  isActive: boolean;
+  mode: "closing" | "opening" | "closed" | "none";
 };
 
 export default function PageTransition({
   children,
-  isActive,
+  mode,
 }: PageTransitionProps) {
   const [showContent, setShowContent] = useState(true);
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const [phase, setPhase] = useState<"closing" | "opening" | "none">("none");
+  const [phase, setPhase] = useState<"closing" | "opening" | "closed" | "none">(
+    "closed"
+  ); // Bắt đầu ở trạng thái đóng
 
   useEffect(() => {
-    if (isActive) {
-      // Phase 1: Đóng vào (che màn hình cũ) - 600ms
+    if (mode === "closing") {
+      // Phase đóng: che màn hình
       setIsTransitioning(true);
       setPhase("closing");
-      setShowContent(true); // Giữ nội dung hiển thị trong lúc đóng vào
+      setShowContent(true);
 
-      // Sau 600ms (đóng vào xong) + 1000ms delay, chuyển sang phase 2: Mở ra
-      const timer1 = setTimeout(() => {
-        // Không cần setShowContent(false) vì nội dung đã được thay đổi ở TransitionWrapper
-        setPhase("opening");
+      // Sau khi đóng xong (800ms), chuyển sang trạng thái đóng hoàn toàn
+      const timer = setTimeout(() => {
+        setPhase("closed");
+        setIsTransitioning(true); // Giữ overlay hiển thị
+      }, 800);
 
-        // Sau khi mở ra xong (600ms nữa), reset trạng thái
-        const timer2 = setTimeout(() => {
-          setIsTransitioning(false);
-          setPhase("none");
-        }, 600);
+      return () => clearTimeout(timer);
+    } else if (mode === "closed") {
+      // Trạng thái đóng hoàn toàn: overlay che màn hình
+      setIsTransitioning(true);
+      setPhase("closed");
+      setShowContent(true);
+    } else if (mode === "opening") {
+      // Phase mở: mở ra từ trạng thái đóng
+      setIsTransitioning(true);
+      setPhase("opening");
+      setShowContent(true);
 
-        return () => clearTimeout(timer2);
-      }, 600 + 1000); // 600ms đóng vào + 1000ms delay để đảm bảo trang tiếp theo đã ready
+      // Sau khi mở xong (800ms), reset
+      const timer = setTimeout(() => {
+        setIsTransitioning(false);
+        setPhase("none");
+      }, 800);
 
-      return () => clearTimeout(timer1);
+      return () => clearTimeout(timer);
     } else {
+      // Không có transition
       setShowContent(true);
       setIsTransitioning(false);
       setPhase("none");
     }
-  }, [isActive]);
+  }, [mode]);
 
   return (
     <div className="relative w-full h-full overflow-hidden">
@@ -56,8 +69,10 @@ export default function PageTransition({
             className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[10000] flex flex-col items-center gap-4"
             initial={{ opacity: 0, scale: 0.8 }}
             animate={
-              phase === "opening"
+              phase === "opening" || phase === "none"
                 ? { opacity: 0, scale: 0.8 }
+                : phase === "closing" || phase === "closed"
+                ? { opacity: 1, scale: 1 }
                 : { opacity: 1, scale: 1 }
             }
             exit={{ opacity: 0, scale: 0.8 }}
@@ -82,8 +97,10 @@ export default function PageTransition({
               className="text-sm font-medium text-gray-700 whitespace-nowrap"
               initial={{ opacity: 0, y: 10 }}
               animate={
-                phase === "opening"
+                phase === "opening" || phase === "none"
                   ? { opacity: 0, y: 10 }
+                  : phase === "closing" || phase === "closed"
+                  ? { opacity: 1, y: 0 }
                   : { opacity: 1, y: 0 }
               }
               transition={{
@@ -97,13 +114,23 @@ export default function PageTransition({
 
           {/* Nửa trên trái - tam giác từ góc trên trái */}
           <motion.div
-            key="part-top-left"
+            key={`part-top-left-${phase}`}
             className="absolute top-0 left-0 w-full h-full bg-white z-[9999]"
-            initial={{
-              clipPath: "polygon(0 0, 0 0, 0 0, 0 0)",
-            }}
+            initial={
+              phase === "opening"
+                ? {
+                    clipPath: "polygon(0 0, 100% 0, 0 100%, 0 100%)",
+                  }
+                : phase === "closed"
+                ? {
+                    clipPath: "polygon(0 0, 100% 0, 0 100%, 0 100%)",
+                  }
+                : {
+                    clipPath: "polygon(0 0, 0 0, 0 0, 0 0)",
+                  }
+            }
             animate={
-              phase === "closing"
+              phase === "closing" || phase === "closed"
                 ? {
                     clipPath: "polygon(0 0, 100% 0, 0 100%, 0 100%)",
                   }
@@ -116,19 +143,30 @@ export default function PageTransition({
                   }
             }
             transition={{
-              duration: 0.6,
+              duration: 0.8,
               ease: "easeInOut",
             }}
           />
           {/* Nửa dưới phải - tam giác từ góc dưới phải */}
           <motion.div
-            key="part-bottom-right"
+            key={`part-bottom-right-${phase}`}
             className="absolute top-0 left-0 w-full h-full bg-white z-[9999]"
-            initial={{
-              clipPath: "polygon(100% 100%, 100% 100%, 100% 100%, 100% 100%)",
-            }}
+            initial={
+              phase === "opening"
+                ? {
+                    clipPath: "polygon(100% 100%, 0 100%, 100% 0, 100% 100%)",
+                  }
+                : phase === "closed"
+                ? {
+                    clipPath: "polygon(100% 100%, 0 100%, 100% 0, 100% 100%)",
+                  }
+                : {
+                    clipPath:
+                      "polygon(100% 100%, 100% 100%, 100% 100%, 100% 100%)",
+                  }
+            }
             animate={
-              phase === "closing"
+              phase === "closing" || phase === "closed"
                 ? {
                     clipPath: "polygon(100% 100%, 0 100%, 100% 0, 100% 100%)",
                   }
@@ -143,7 +181,7 @@ export default function PageTransition({
                   }
             }
             transition={{
-              duration: 0.6,
+              duration: 0.8,
               ease: "easeInOut",
             }}
           />

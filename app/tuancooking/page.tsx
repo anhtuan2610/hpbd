@@ -158,6 +158,11 @@ export default function Page2() {
   }, [setTheme]);
 
   const handleCakeSurfaceClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    // Giới hạn tối đa 24 nến
+    if (candles.length >= 24) {
+      return; // Không thêm nến nữa nếu đã đạt giới hạn
+    }
+
     const rect = e.currentTarget.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = ((e.clientY - rect.top) / rect.height) * 100;
