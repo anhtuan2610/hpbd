@@ -108,7 +108,7 @@ export default function PageTransition({
                 delay: phase === "opening" ? 0 : 0.2,
               }}
             >
-              made by Trần Anh Tuấn
+              made by Tuấn
             </motion.p>
           </motion.div>
 

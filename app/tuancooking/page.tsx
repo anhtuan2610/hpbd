@@ -17,6 +17,9 @@ import {
   Progress,
   ProgressIndicator,
 } from "@/components/animate-ui/primitives/radix/progress";
+import FloatingIconsField from "@/components/FloatingIcons";
+import CardAnimation from "@/components/CardAnimation";
+import { ArrowLeft } from "lucide-react";
 
 type CandlePosition = {
   id: number;
@@ -185,6 +188,126 @@ export default function Page2() {
 
   const content = (
     <>
+      {/* Các icon bay lên */}
+      {/* <FloatingIconsField /> */}
+
+      {/* Theme Toggler ở giữa màn hình, hơi bên trên */}
+      <div
+        className="absolute top-[5%] right-4 z-20 lg:left-1/2 lg:-translate-x-1/2 lg:right-auto"
+        data-theme-button-container
+      >
+        {/* <AnimatedThemeToggler className="rounded-full bg-white/80 dark:bg-gray-800/80 p-3 shadow-lg hover:bg-white dark:hover:bg-gray-800 transition-colors" /> */}
+        <ThemeButton />
+      </div>
+
+      {/* Nội dung màn hình mới */}
+      <main className="relative z-10 flex h-full items-center justify-center">
+        <div className="flex flex-col lg:flex-row items-center justify-center h-fit lg:mb-0 gap-10 mt-20 lg:gap-8">
+          <div className="relative flex flex-col items-center gap-8">
+            {/* Mũi tên trỏ vào bánh kem (từ trên xuống) */}
+            {candles.length === 0 && (
+              <div className="absolute -top-20 left-20 -translate-x-1/2 pointer-events-none z-30">
+                <p
+                  className="absolute text-base font-semibold text-pink-600 drop-shadow-lg whitespace-nowrap"
+                  style={{
+                    top: "-30px",
+                    left: "20%",
+                    transform: "translateX(-50%)",
+                    rotate: "-10deg",
+                  }}
+                >
+                  Cắm nến vào đây nhé
+                </p>
+                <div className="relative w-20 h-20">
+                  <Image
+                    src="/arrow.png"
+                    alt="Arrow pointing to cake"
+                    fill
+                    className="object-contain"
+                    style={{ transform: "rotate(90deg)" }}
+                  />
+                </div>
+              </div>
+            )}
+            <CakeSvg />
+            {/* Border để xác định bề mặt bánh kem */}
+            <div
+              className="absolute rounded-full flex items-center justify-center cursor-pointer"
+              style={{
+                width: "80%",
+                height: "clamp(25%, 30vh, 35%)",
+                top: "0%",
+                left: "50%",
+                transform: "translateX(-50%)",
+              }}
+              onClick={handleCakeSurfaceClick}
+            >
+              {/* Render các cây nến đã được thêm */}
+              {candles.map((candle) => (
+                <div
+                  key={candle.id}
+                  className="absolute"
+                  style={{
+                    left: `${candle.x}%`,
+                    top: `${candle.y}%`,
+                    transform: "translate(-50%, -50%)",
+                  }}
+                >
+                  <div className="relative w-4 md:w-6">
+                    <CandleSvg hideFlameHeight={50} />
+                    {resolvedTheme === "dark" && <FireAnimation />}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Progress bar - chỉ hiển thị khi đang nghe */}
+            {isListening && hasPermission && resolvedTheme === "dark" && (
+              <div className="w-64 md:w-80 mt-4">
+                <Progress
+                  value={blowProgress}
+                  className="h-3 bg-white/20 dark:bg-gray-700/30 rounded-full overflow-hidden relative"
+                >
+                  <ProgressIndicator
+                    className="h-full w-full rounded-full bg-white/40 backdrop-blur-sm"
+                    style={{
+                      background: "rgba(255, 255, 255, 0.4)",
+                      backdropFilter: "blur(8px)",
+                    }}
+                  />
+                </Progress>
+              </div>
+            )}
+          </div>
+          <div className="lg:ml-8">
+            <CardAnimation />
+          </div>
+        </div>
+      </main>
+
+      {/* Nút Back - chỉ hiển thị khi light mode */}
+      {resolvedTheme === "light" && (
+        <AnimatedLink
+          href="/"
+          className="absolute top-[5%] left-4 z-20 rounded-full bg-pink-300 w-12 h-12 flex items-center justify-center text-white shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-xl active:scale-95"
+        >
+          <ArrowLeft size={24} />
+        </AnimatedLink>
+      )}
+
+      {/* Nút bật microphone - chỉ hiển thị khi dark mode và không đang nghe, thay thế nút Back */}
+      {!isListening && !isLoading && resolvedTheme === "dark" && (
+        <div className="absolute top-[5%] left-4 z-20">
+          <button
+            onClick={startListening}
+            className="bg-linear-to-r from-purple-500 via-pink-500 to-red-500 hover:from-purple-600 hover:via-pink-600 hover:to-red-600 text-white px-4 py-2.5 rounded-full shadow-lg font-semibold text-sm flex items-center gap-2 transition-all duration-300 hover:scale-105 active:scale-95 border border-white/20 backdrop-blur-sm"
+          >
+            <span className="text-lg animate-pulse">🎂</span>
+            <span>Thổi nến</span>
+          </button>
+        </div>
+      )}
+
       {/* Pháo hoa animation khi thổi thành công - nằm trên thông báo */}
       {showBlowSuccess && partyAnimationData && (
         <div className="fixed inset-0 z-[60] pointer-events-none">
@@ -204,7 +327,7 @@ export default function Page2() {
             <div className="text-center">
               <div className="text-7xl mb-4 animate-bounce">🎉</div>
               <div className="text-3xl font-bold mb-2">
-                Chúc Quyên tuổi 25 mọi thứ tốt đẹp!
+                Chúc Quyên tuổi 24 mọi thứ tốt đẹp!
               </div>
               <button
                 onClick={handleConfirmBlow}
@@ -214,119 +337,6 @@ export default function Page2() {
               </button>
             </div>
           </div>
-        </div>
-      )}
-
-      {/* Các icon bay lên */}
-      {/* <FloatingIconsField /> */}
-
-      {/* Nội dung màn hình mới */}
-      <main className="relative z-10 flex h-full items-center justify-center">
-        <div className="relative flex flex-col items-center gap-8 mb-15">
-          {/* Mũi tên trỏ vào bánh kem (từ trên xuống) */}
-          {candles.length === 0 && (
-            <div className="absolute -top-30 left-20 -translate-x-1/2 pointer-events-none z-30">
-              <p
-                className="absolute text-lg font-semibold text-pink-600 drop-shadow-lg whitespace-nowrap"
-                style={{
-                  top: "-30px",
-                  left: "20%",
-                  transform: "translateX(-50%)",
-                  rotate: "-10deg",
-                }}
-              >
-                Cắm nến vào đây nè
-              </p>
-              <div className="relative w-30 h-30">
-                <Image
-                  src="/arrow.png"
-                  alt="Arrow pointing to cake"
-                  fill
-                  className="object-contain"
-                  style={{ transform: "rotate(90deg)" }}
-                />
-              </div>
-            </div>
-          )}
-          <CakeSvg />
-          {/* Border để xác định bề mặt bánh kem */}
-          <div
-            className="absolute rounded-full flex items-center justify-center cursor-pointer"
-            style={{
-              width: "80%",
-              height: "clamp(25%, 30vh, 35%)",
-              top: "0%",
-              left: "50%",
-              transform: "translateX(-50%)",
-            }}
-            onClick={handleCakeSurfaceClick}
-          >
-            {/* Render các cây nến đã được thêm */}
-            {candles.map((candle) => (
-              <div
-                key={candle.id}
-                className="absolute"
-                style={{
-                  left: `${candle.x}%`,
-                  top: `${candle.y}%`,
-                  transform: "translate(-50%, -50%)",
-                }}
-              >
-                <div className="relative w-4 md:w-6">
-                  <CandleSvg hideFlameHeight={50} />
-                  {resolvedTheme === "dark" && <FireAnimation />}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Progress bar - chỉ hiển thị khi đang nghe */}
-          {isListening && hasPermission && resolvedTheme === "dark" && (
-            <div className="w-64 md:w-80 mt-4">
-              <Progress
-                value={blowProgress}
-                className="h-3 bg-white/20 dark:bg-gray-700/30 rounded-full overflow-hidden relative"
-              >
-                <ProgressIndicator
-                  className="h-full w-full rounded-full bg-white/40 backdrop-blur-sm"
-                  style={{
-                    background: "rgba(255, 255, 255, 0.4)",
-                    backdropFilter: "blur(8px)",
-                  }}
-                />
-              </Progress>
-            </div>
-          )}
-        </div>
-      </main>
-
-      {/* Theme Toggler ở giữa màn hình, hơi bên trên */}
-      <div
-        className="absolute top-[5%] left-1/2 -translate-x-1/2 z-20"
-        data-theme-button-container
-      >
-        {/* <AnimatedThemeToggler className="rounded-full bg-white/80 dark:bg-gray-800/80 p-3 shadow-lg hover:bg-white dark:hover:bg-gray-800 transition-colors" /> */}
-        <ThemeButton />
-      </div>
-
-      {/* Nút Back */}
-      <AnimatedLink
-        href="/"
-        className="absolute bottom-10 left-8 z-20 rounded-full bg-pink-300  px-8 py-4 text-lg font-bold text-white shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-xl active:scale-95"
-      >
-        ← Back
-      </AnimatedLink>
-
-      {/* Nút bật microphone - chỉ hiển thị khi dark mode và không đang nghe */}
-      {!isListening && !isLoading && resolvedTheme === "dark" && (
-        <div className="absolute bottom-11 right-8 z-20">
-          <button
-            onClick={startListening}
-            className="bg-linear-to-r from-purple-500 via-pink-500 to-red-500 hover:from-purple-600 hover:via-pink-600 hover:to-red-600 text-white px-4 py-2.5 rounded-full shadow-lg font-semibold text-sm flex items-center gap-2 transition-all duration-300 hover:scale-105 active:scale-95 border border-white/20 backdrop-blur-sm"
-          >
-            <span className="text-lg animate-pulse">🎂</span>
-            <span>Thổi nến</span>
-          </button>
         </div>
       )}
 

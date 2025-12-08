@@ -6,7 +6,7 @@ export default function CakeSvg() {
       xmlns="http://www.w3.org/2000/svg"
       preserveAspectRatio="xMidYMid meet"
       viewBox="0 0 126 89"
-      className="w-80 h-auto md:w-96 lg:w-106 xl:w-120"
+      className="w-64 h-auto md:w-80 lg:w-96 xl:w-106"
     >
       <defs>
         <linearGradient
