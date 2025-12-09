@@ -3,24 +3,19 @@
 import { useState, useEffect, useRef } from "react";
 import { flushSync } from "react-dom";
 import { useTheme } from "next-themes";
-import Image from "next/image";
-import Lottie from "lottie-react";
 import ClickSpark from "@/components/ClickSpark";
-import AnimatedLink from "@/components/AnimatedLink";
-import CakeSvg from "@/components/CakeSvg";
-import CandleSvg from "@/components/CandleSvg";
 import ThemeButton from "@/components/ThemeButton";
-import FireAnimation from "@/components/FireAnimation";
 import { StarsBackground } from "@/components/animate-ui/components/backgrounds/stars";
 import { useBlowDetection } from "@/hooks/useBlowDetection";
-import {
-  Progress,
-  ProgressIndicator,
-} from "@/components/animate-ui/primitives/radix/progress";
 import CardAnimation from "@/components/CardAnimation";
-import { ArrowLeft } from "lucide-react";
-import { NumberTicker } from "@/components/ui/number-ticker";
-import { SparklesText } from "@/components/ui/sparkles-text";
+import CakeWithCandles from "@/components/CakeWithCandles";
+import AgeNumberDisplay from "@/components/AgeNumberDisplay";
+import BlowProgressBar from "@/components/BlowProgressBar";
+import BlowButton from "@/components/BlowButton";
+import BackButton from "@/components/BackButton";
+import BlowSuccessModal from "@/components/BlowSuccessModal";
+import ErrorNotification from "@/components/ErrorNotification";
+import LoadingIndicator from "@/components/LoadingIndicator";
 
 type CandlePosition = {
   id: number;
@@ -32,19 +27,10 @@ export default function Page2() {
   const [candles, setCandles] = useState<CandlePosition[]>([]);
   const [showBlowSuccess, setShowBlowSuccess] = useState(false);
   const [isBlowConfirmed, setIsBlowConfirmed] = useState(true); // Cho phép thổi lần đầu
-  const [partyAnimationData, setPartyAnimationData] = useState<unknown>(null);
   const hasSetInitialTheme = useRef(false);
   const hasShownSuccess = useRef(false); // Track xem đã hiện thông báo chưa
   const stopListeningRef = useRef<(() => void) | null>(null);
   const { resolvedTheme, setTheme } = useTheme();
-
-  // Load pháo hoa animation
-  useEffect(() => {
-    fetch("/Party.json")
-      .then((res) => res.json())
-      .then((data) => setPartyAnimationData(data))
-      .catch((err) => console.error("Error loading party animation:", err));
-  }, []);
 
   // Load flower animation
   // useEffect(() => {
@@ -235,96 +221,18 @@ export default function Page2() {
       <main className="relative z-10 flex h-full items-center justify-center">
         <div className="flex flex-col lg:flex-row items-center justify-center h-fit lg:mb-0 gap-10 mt-20 lg:gap-8">
           <div className="relative flex flex-col items-center gap-8">
-            {/* Mũi tên trỏ vào bánh kem (từ trên xuống) */}
-            {candles.length === 0 && (
-              <div className="absolute -top-20 left-20 -translate-x-1/2 pointer-events-none z-30">
-                <p
-                  className="absolute text-base font-semibold text-pink-600 dark:text-pink-400 drop-shadow-lg whitespace-nowrap"
-                  style={{
-                    top: "-30px",
-                    left: "20%",
-                    transform: "translateX(-50%)",
-                    rotate: "-10deg",
-                  }}
-                >
-                  Cắm nến vào đây nhé
-                </p>
-                <div className="relative w-20 h-20">
-                  <Image
-                    src="/arrow.png"
-                    alt="Arrow pointing to cake"
-                    fill
-                    className="object-contain"
-                    style={{ transform: "rotate(90deg)" }}
-                  />
-                </div>
-              </div>
-            )}
-            <CakeSvg />
-
-            {/* Số tuổi trên bánh kem */}
-            {resolvedTheme === "dark" && (
-              <div className="absolute -top-25 lg:-top-30 left-1/2 -translate-x-1/2 z-30 pointer-events-none">
-                <SparklesText
-                  colors={{ first: "#FFB6C1", second: "#FF69B4" }}
-                  sparklesCount={4}
-                >
-                  <NumberTicker
-                    value={24}
-                    startValue={0}
-                    className="text-5xl lg:text-7xl font-semibold tracking-tighter text-white px-1"
-                  />
-                </SparklesText>
-              </div>
-            )}
-            {/* Border để xác định bề mặt bánh kem */}
-            <div
-              className="absolute rounded-full flex items-center justify-center cursor-pointer"
-              style={{
-                width: "80%",
-                height: "clamp(25%, 30vh, 35%)",
-                top: "0%",
-                left: "50%",
-                transform: "translateX(-50%)",
-              }}
-              onClick={handleCakeSurfaceClick}
-            >
-              {/* Render các cây nến đã được thêm */}
-              {candles.map((candle) => (
-                <div
-                  key={candle.id}
-                  className="absolute"
-                  style={{
-                    left: `${candle.x}%`,
-                    top: `${candle.y}%`,
-                    transform: "translate(-50%, -50%)",
-                  }}
-                >
-                  <div className="relative w-4 md:w-6">
-                    <CandleSvg hideFlameHeight={50} />
-                    {resolvedTheme === "dark" && <FireAnimation />}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Progress bar - chỉ hiển thị khi đang nghe */}
-            {isListening && hasPermission && resolvedTheme === "dark" && (
-              <div className="w-64 md:w-80 mt-4">
-                <Progress
-                  value={blowProgress}
-                  className="h-3 bg-white/20 dark:bg-gray-700/30 rounded-full overflow-hidden relative"
-                >
-                  <ProgressIndicator
-                    className="h-full w-full rounded-full bg-white/40 backdrop-blur-sm"
-                    style={{
-                      background: "rgba(255, 255, 255, 0.4)",
-                      backdropFilter: "blur(8px)",
-                    }}
-                  />
-                </Progress>
-              </div>
-            )}
+            <CakeWithCandles
+              candles={candles}
+              onCakeClick={handleCakeSurfaceClick}
+              resolvedTheme={resolvedTheme}
+            />
+            <AgeNumberDisplay resolvedTheme={resolvedTheme} />
+            <BlowProgressBar
+              isListening={isListening}
+              hasPermission={hasPermission}
+              resolvedTheme={resolvedTheme}
+              blowProgress={blowProgress}
+            />
           </div>
           <div className="lg:ml-8">
             <CardAnimation />
@@ -332,102 +240,16 @@ export default function Page2() {
         </div>
       </main>
 
-      {/* Nút Back - chỉ hiển thị khi light mode */}
-      {resolvedTheme === "light" && (
-        <AnimatedLink
-          href="/"
-          className="absolute top-[5%] left-4 z-20 rounded-full bg-pink-300 w-12 h-12 flex items-center justify-center text-white shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-xl active:scale-95"
-        >
-          <ArrowLeft size={24} />
-        </AnimatedLink>
-      )}
-
-      {/* Nút bật microphone - chỉ hiển thị khi dark mode và không đang nghe, thay thế nút Back */}
-      {!isListening && !isLoading && resolvedTheme === "dark" && (
-        <div className="absolute top-[5%] left-4 z-20">
-          <button
-            onClick={startListening}
-            className="bg-white/10 hover:bg-white/20 text-white px-4 py-3 rounded-full shadow-lg font-medium text-sm flex items-center gap-2 transition-all duration-300 hover:scale-105 active:scale-95 border border-white/30 backdrop-blur-md"
-          >
-            <span className="text-lg">🎂</span>
-            <span>Thổi nến</span>
-          </button>
-        </div>
-      )}
-
-      {/* Pháo hoa animation khi thổi thành công - nằm trên thông báo */}
-      {showBlowSuccess && partyAnimationData && (
-        <div className="fixed inset-0 z-[60] pointer-events-none">
-          <Lottie
-            animationData={partyAnimationData}
-            loop={false}
-            autoplay={true}
-            style={{ width: "100%", height: "100%" }}
-          />
-        </div>
-      )}
-
-      {/* Thông báo khi phát hiện tiếng thổi - chỉ hiện 1 lần, cần xác nhận */}
-      {showBlowSuccess && (
-        <div className="fixed inset-0 z-[50] flex items-center justify-center">
-          <div className="bg-linear-to-br from-green-500 to-emerald-600 text-white px-8 py-8 rounded-3xl shadow-2xl max-w-md mx-4 border-4 border-white/20">
-            <div className="text-center">
-              <div className="text-7xl mb-4 animate-bounce">🎉</div>
-              <div className="text-3xl font-bold mb-2">
-                Chúc Quyên tuổi 24 mọi thứ tốt đẹp!
-              </div>
-              <button
-                onClick={handleConfirmBlow}
-                className="bg-white text-green-600 px-8 py-3 mt-2 rounded-full font-bold text-lg hover:bg-gray-100 transition-all duration-300 hover:scale-105 active:scale-95 shadow-lg"
-              >
-                Oki
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Hiển thị loading */}
-      {isLoading && (
-        <div className="absolute bottom-8 right-8 z-20 bg-yellow-500 text-white px-4 py-2 rounded-full shadow-lg font-semibold text-sm flex items-center gap-2">
-          <span className="text-lg animate-spin">⏳</span>
-          <span>Đang yêu cầu quyền...</span>
-        </div>
-      )}
-
-      {/* Hiển thị lỗi */}
-      {error && (
-        <div className="fixed top-4 right-4 z-30 bg-red-500 text-white px-6 py-4 rounded-2xl shadow-lg font-bold text-sm max-w-sm">
-          <div className="flex items-start gap-2">
-            <span className="text-2xl">⚠️</span>
-            <div className="flex-1">
-              <div className="font-bold mb-2">Lỗi:</div>
-              <div className="text-xs whitespace-pre-line leading-relaxed">
-                {error}
-              </div>
-              {permissionStatus === "denied" && (
-                <button
-                  onClick={() => {
-                    window.location.reload();
-                  }}
-                  className="mt-3 bg-white text-red-500 px-4 py-2 rounded-lg text-xs font-bold hover:bg-gray-100 transition-colors"
-                >
-                  🔄 Làm mới trang
-                </button>
-              )}
-            </div>
-            <button
-              onClick={() => {
-                // Đóng thông báo lỗi (error sẽ được clear khi thử lại)
-                window.location.reload();
-              }}
-              className="ml-2 text-white hover:text-gray-200 text-xl"
-            >
-              ✕
-            </button>
-          </div>
-        </div>
-      )}
+      <BackButton resolvedTheme={resolvedTheme} />
+      <BlowButton
+        isListening={isListening}
+        isLoading={isLoading}
+        resolvedTheme={resolvedTheme}
+        onStartListening={startListening}
+      />
+      <BlowSuccessModal show={showBlowSuccess} onConfirm={handleConfirmBlow} />
+      <LoadingIndicator isLoading={isLoading} />
+      <ErrorNotification error={error} permissionStatus={permissionStatus} />
 
       {/* Flower animation ở dưới cùng màn hình */}
       {/* {flowerAnimationData && (
