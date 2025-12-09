@@ -24,6 +24,13 @@
   --circle-transition: 0.3s cubic-bezier(0, -0.02, 0.35, 1.17);
 }
 
+/* Responsive: nhỏ hơn trên màn hình nhỏ */
+@media (max-width: 768px) {
+  .theme-switch {
+    --toggle-size: 20px;
+  }
+}
+
 .theme-switch,
 .theme-switch *,
 .theme-switch *::before,

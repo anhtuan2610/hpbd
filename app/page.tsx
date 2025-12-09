@@ -33,7 +33,7 @@ export default function Home() {
                   rotate: "30deg",
                 }}
               >
-                Kéo cái này nè
+                Kéo cái này nhé
               </p>
               <div className="relative w-30 h-30">
                 <Image

@@ -78,15 +78,15 @@ function FloatingIcon({
       }}
       initial={{
         x: `${x}vw`,
-        y: "100vh",
+        y: "-10vh",
         opacity: 0,
         rotate: 0,
       }}
       animate={{
-        y: "-10vh",
+        y: "100vh",
         opacity: [0, 1, 1, 0],
         x: `${x}vw`,
-        rotate: [0, 360],
+        rotate: [0, -360],
       }}
       transition={{
         duration,

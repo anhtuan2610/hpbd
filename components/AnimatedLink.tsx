@@ -31,10 +31,10 @@ export default function AnimatedLink({
     // Trigger transition trước
     triggerTransition();
 
-    // Navigate sau khi đóng vào xong + delay: đóng vào (600ms) + delay (1000ms) = 1600ms
+    // Navigate sau khi đóng vào xong + delay: đóng vào (800ms) + delay (500ms) = 1300ms
     setTimeout(() => {
       router.push(href);
-    }, 1600);
+    }, 1300);
   };
 
   return (

@@ -68,10 +68,10 @@ export default function CuteDoggie() {
   useEffect(() => {
     if (phase === 2) {
       // Ước tính thời gian typing: "Há lu, Tuấn nè !" có khoảng 15 ký tự
-      // typingSpeed = 50ms, pauseDuration = 3000ms
-      // Tổng thời gian: 15 * 50 + 3000 = 3750ms
+      // typingSpeed = 50ms, pauseDuration = 1000ms (giảm từ 2000ms)
+      // Tổng thời gian: 15 * 50 + 1000 = 1750ms
       const typingTime = "Há lu, Tuấn nè !".length * 50;
-      const totalTime = typingTime + 3000; // pauseDuration + thời gian đọc
+      const totalTime = typingTime + 1500; // pauseDuration + thời gian đọc (giảm delay)
 
       const timeout = setTimeout(() => {
         setPhase(3);
@@ -155,7 +155,7 @@ export default function CuteDoggie() {
                   wordBreak: "break-word",
                 }}
                 typingSpeed={50}
-                pauseDuration={2000}
+                pauseDuration={1500}
                 deletingSpeed={30}
                 loop={false}
                 showCursor={true}
