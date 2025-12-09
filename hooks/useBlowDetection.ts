@@ -118,11 +118,23 @@ export function useBlowDetection(
       console.log("🎧 Bắt đầu phân tích audio...");
 
       // Hàm phân tích audio liên tục với thanh progress
-      const PROGRESS_FRAMES_NEEDED = 70; // Tăng lên 70 frame (khoảng 1.2s) để đảm bảo progress đầy trước khi trigger
+      const PROGRESS_FRAMES_NEEDED = 40; // Trả lại 40 frame (khoảng 0.7s) - độ nhạy cũ
       progressRef.current = 0; // Reset progress khi bắt đầu
       progressReached100Ref.current = false; // Reset flag
 
+      // Delay 1 giây trước khi bắt đầu nhận tiếng thổi
+      let canStartAnalyzing = false;
+      setTimeout(() => {
+        canStartAnalyzing = true;
+        console.log("🎤 Bắt đầu nhận tiếng thổi sau 1 giây delay");
+      }, 1000);
+
       const analyze = () => {
+        // Chưa đến thời gian bắt đầu, bỏ qua
+        if (!canStartAnalyzing) {
+          animationFrameRef.current = requestAnimationFrame(analyze);
+          return;
+        }
         if (!analyserRef.current || !dataArrayRef.current) return;
 
         analyserRef.current.getByteFrequencyData(dataArrayRef.current as any);
