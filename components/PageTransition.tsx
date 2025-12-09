@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { motion } from "motion/react";
 import Image from "next/image";
 
@@ -14,10 +14,14 @@ export default function PageTransition({
   mode,
 }: PageTransitionProps) {
   const [showContent, setShowContent] = useState(true);
-  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(
+    mode === "closed" || mode === "closing"
+  ); // Khởi tạo dựa trên mode ban đầu
   const [phase, setPhase] = useState<"closing" | "opening" | "closed" | "none">(
-    "closed"
-  ); // Bắt đầu ở trạng thái đóng
+    mode === "closed" ? "closed" : "none"
+  ); // Khởi tạo dựa trên mode ban đầu
+  const [hasShownInitialAvatar, setHasShownInitialAvatar] = useState(false); // Track xem đã hiển thị avatar lần đầu chưa
+  const isFirstMountRef = useRef(true); // Track xem đây có phải là lần mount đầu tiên không
 
   useEffect(() => {
     if (mode === "closing") {
@@ -59,58 +63,69 @@ export default function PageTransition({
     }
   }, [mode]);
 
+  // Đánh dấu đã hiển thị avatar sau khi phase chuyển sang "opening" (tức là đã hiển thị xong)
+  useEffect(() => {
+    if (
+      phase === "opening" &&
+      isFirstMountRef.current &&
+      !hasShownInitialAvatar
+    ) {
+      setHasShownInitialAvatar(true);
+      isFirstMountRef.current = false;
+    }
+  }, [phase, hasShownInitialAvatar]);
+
   return (
     <div className="relative w-full h-full overflow-hidden">
       {/* Transition overlay - 2 nửa màn hình đóng chéo */}
       {isTransitioning && ( //isTransitioning
         <>
-          {/* Avatar và text ở giữa màn hình - ẩn đi khi bắt đầu phase opening */}
-          <motion.div
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[10000] flex flex-col items-center gap-4"
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={
-              phase === "opening" || phase === "none"
-                ? { opacity: 0, scale: 0.8 }
-                : phase === "closing" || phase === "closed"
-                ? { opacity: 1, scale: 1 }
-                : { opacity: 1, scale: 1 }
-            }
-            exit={{ opacity: 0, scale: 0.8 }}
-            transition={{ duration: 0.3, ease: "easeOut" }}
-          >
-            {/* Avatar tròn */}
-            <div className="relative w-30 h-30 rounded-full overflow-hidden border-4 border-white shadow-2xl">
-              <Image
-                src="/avt1.jpg"
-                alt="Avatar"
-                fill
-                className="object-cover"
-                style={{
-                  objectPosition: "10% 30%",
-                  transform: "scale(2.0) translateX(0%) translateY(-10%)",
-                }}
-                priority
-              />
-            </div>
-            {/* Text bên dưới */}
-            <motion.p
-              className="text-sm font-medium text-gray-700 whitespace-nowrap"
-              initial={{ opacity: 0, y: 10 }}
-              animate={
-                phase === "opening" || phase === "none"
-                  ? { opacity: 0, y: 10 }
-                  : phase === "closing" || phase === "closed"
-                  ? { opacity: 1, y: 0 }
-                  : { opacity: 1, y: 0 }
-              }
-              transition={{
-                duration: 0.3,
-                delay: phase === "opening" ? 0 : 0.2,
-              }}
-            >
-              made by Tuấn
-            </motion.p>
-          </motion.div>
+          {/* Avatar và text ở giữa màn hình - chỉ hiển thị khi load trang lần đầu */}
+          {!hasShownInitialAvatar &&
+            (phase === "closed" || phase === "closing") && (
+              <motion.div
+                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[10000] flex flex-col items-center gap-4"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={
+                  phase === "closed"
+                    ? { opacity: 1, scale: 1 }
+                    : { opacity: 0, scale: 0.8 }
+                }
+                exit={{ opacity: 0, scale: 0.8 }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
+              >
+                {/* Avatar tròn */}
+                <div className="relative w-30 h-30 rounded-full overflow-hidden border-4 border-white shadow-2xl">
+                  <Image
+                    src="/avt1.jpg"
+                    alt="Avatar"
+                    fill
+                    className="object-cover"
+                    style={{
+                      objectPosition: "10% 30%",
+                      transform: "scale(2.0) translateX(0%) translateY(-10%)",
+                    }}
+                    priority
+                  />
+                </div>
+                {/* Text bên dưới */}
+                <motion.p
+                  className="text-sm font-medium text-gray-700 whitespace-nowrap"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={
+                    phase === "closed"
+                      ? { opacity: 1, y: 0 }
+                      : { opacity: 0, y: 10 }
+                  }
+                  transition={{
+                    duration: 0.3,
+                    delay: phase === "closed" ? 0.2 : 0,
+                  }}
+                >
+                  made by Trần Anh Tuấn
+                </motion.p>
+              </motion.div>
+            )}
 
           {/* Nửa trên trái - tam giác từ góc trên trái */}
           <motion.div

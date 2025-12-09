@@ -17,9 +17,10 @@ import {
   Progress,
   ProgressIndicator,
 } from "@/components/animate-ui/primitives/radix/progress";
-import FloatingIconsField from "@/components/FloatingIcons";
 import CardAnimation from "@/components/CardAnimation";
 import { ArrowLeft } from "lucide-react";
+import { NumberTicker } from "@/components/ui/number-ticker";
+import { SparklesText } from "@/components/ui/sparkles-text";
 
 type CandlePosition = {
   id: number;
@@ -35,7 +36,7 @@ export default function Page2() {
   const hasSetInitialTheme = useRef(false);
   const hasShownSuccess = useRef(false); // Track xem đã hiện thông báo chưa
   const stopListeningRef = useRef<(() => void) | null>(null);
-  const { theme, systemTheme, resolvedTheme, setTheme } = useTheme();
+  const { resolvedTheme, setTheme } = useTheme();
 
   // Load pháo hoa animation
   useEffect(() => {
@@ -44,6 +45,14 @@ export default function Page2() {
       .then((data) => setPartyAnimationData(data))
       .catch((err) => console.error("Error loading party animation:", err));
   }, []);
+
+  // Load flower animation
+  // useEffect(() => {
+  //   fetch("/flower-animatino.json")
+  //     .then((res) => res.json())
+  //     .then((data) => setFlowerAnimationData(data))
+  //     .catch((err) => console.error("Error loading flower animation:", err));
+  // }, []);
 
   // Sử dụng hook phát hiện tiếng thổi
   // threshold: 0.4 (thấp hơn cho mobile - dễ phát hiện)
@@ -196,6 +205,28 @@ export default function Page2() {
         className="absolute top-[5%] right-4 z-20 lg:left-1/2 lg:-translate-x-1/2 lg:right-auto"
         data-theme-button-container
       >
+        {/* Mũi tên chỉ vào nút toggle ở góc 8 giờ */}
+        {/* <div className="absolute -bottom-4 -left-22 pointer-events-none z-30">
+          <p
+            className="absolute text-base font-semibold text-pink-600 dark:text-pink-400 drop-shadow-lg whitespace-nowrap"
+            style={{
+              bottom: "50px",
+              left: "-40px",
+              rotate: "-10deg",
+            }}
+          >
+            Sáng / Tối
+          </p>
+          <div className="relative w-20 h-20">
+            <Image
+              src="/arrow.png"
+              alt="Arrow pointing to theme button"
+              fill
+              className="object-contain"
+              style={{ transform: "rotate(30deg)" }}
+            />
+          </div>
+        </div> */}
         {/* <AnimatedThemeToggler className="rounded-full bg-white/80 dark:bg-gray-800/80 p-3 shadow-lg hover:bg-white dark:hover:bg-gray-800 transition-colors" /> */}
         <ThemeButton />
       </div>
@@ -208,7 +239,7 @@ export default function Page2() {
             {candles.length === 0 && (
               <div className="absolute -top-20 left-20 -translate-x-1/2 pointer-events-none z-30">
                 <p
-                  className="absolute text-base font-semibold text-pink-600 drop-shadow-lg whitespace-nowrap"
+                  className="absolute text-base font-semibold text-pink-600 dark:text-pink-400 drop-shadow-lg whitespace-nowrap"
                   style={{
                     top: "-30px",
                     left: "20%",
@@ -230,6 +261,22 @@ export default function Page2() {
               </div>
             )}
             <CakeSvg />
+
+            {/* Số tuổi trên bánh kem */}
+            {resolvedTheme === "dark" && (
+              <div className="absolute -top-25 lg:-top-30 left-1/2 -translate-x-1/2 z-30 pointer-events-none">
+                <SparklesText
+                  colors={{ first: "#FFB6C1", second: "#FF69B4" }}
+                  sparklesCount={4}
+                >
+                  <NumberTicker
+                    value={24}
+                    startValue={0}
+                    className="text-5xl lg:text-7xl font-semibold tracking-tighter text-white px-1"
+                  />
+                </SparklesText>
+              </div>
+            )}
             {/* Border để xác định bề mặt bánh kem */}
             <div
               className="absolute rounded-full flex items-center justify-center cursor-pointer"
@@ -300,9 +347,9 @@ export default function Page2() {
         <div className="absolute top-[5%] left-4 z-20">
           <button
             onClick={startListening}
-            className="bg-linear-to-r from-purple-500 via-pink-500 to-red-500 hover:from-purple-600 hover:via-pink-600 hover:to-red-600 text-white px-4 py-2.5 rounded-full shadow-lg font-semibold text-sm flex items-center gap-2 transition-all duration-300 hover:scale-105 active:scale-95 border border-white/20 backdrop-blur-sm"
+            className="bg-white/10 hover:bg-white/20 text-white px-4 py-3 rounded-full shadow-lg font-medium text-sm flex items-center gap-2 transition-all duration-300 hover:scale-105 active:scale-95 border border-white/30 backdrop-blur-md"
           >
-            <span className="text-lg animate-pulse">🎂</span>
+            <span className="text-lg">🎂</span>
             <span>Thổi nến</span>
           </button>
         </div>
@@ -381,6 +428,23 @@ export default function Page2() {
           </div>
         </div>
       )}
+
+      {/* Flower animation ở dưới cùng màn hình */}
+      {/* {flowerAnimationData && (
+        <div className="fixed bottom-0 left-0 right-0 z-20 pointer-events-none overflow-visible">
+          <Lottie
+            animationData={flowerAnimationData}
+            loop={false}
+            autoplay={true}
+            style={{
+              width: "100%",
+              height: "clamp(150px, 20vh, 300px)",
+              display: "block",
+            }}
+            className="w-full"
+          />
+        </div>
+      )} */}
     </>
   );
 
