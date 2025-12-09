@@ -24,6 +24,7 @@ export function useBlowDetection(
   const dataArrayRef = useRef<Uint8Array | null>(null);
   const lastBlowTimeRef = useRef<number>(0);
   const progressRef = useRef<number>(0); // Dùng ref để track progress
+  const progressReached100Ref = useRef<boolean>(false); // Track xem đã đạt 100% chưa
   const BLOW_COOLDOWN = 500; // Cooldown 500ms để tránh spam
 
   const startListening = async () => {
@@ -117,8 +118,9 @@ export function useBlowDetection(
       console.log("🎧 Bắt đầu phân tích audio...");
 
       // Hàm phân tích audio liên tục với thanh progress
-      const PROGRESS_FRAMES_NEEDED = 40; // Cần 40 frame (khoảng 0.7s) để đầy thanh - nhạy hơn cho mobile
+      const PROGRESS_FRAMES_NEEDED = 70; // Tăng lên 70 frame (khoảng 1.2s) để đảm bảo progress đầy trước khi trigger
       progressRef.current = 0; // Reset progress khi bắt đầu
+      progressReached100Ref.current = false; // Reset flag
 
       const analyze = () => {
         if (!analyserRef.current || !dataArrayRef.current) return;
@@ -176,8 +178,12 @@ export function useBlowDetection(
           progressRef.current = Math.max(0, progressRef.current - 1.5);
         }
 
-        // Cập nhật progress state
-        setBlowProgress(progressRef.current);
+        // Đảm bảo progress không vượt quá 100
+        progressRef.current = Math.min(100, Math.max(0, progressRef.current));
+
+        // Cập nhật progress state - đảm bảo hiển thị đầy đủ
+        const displayProgress = Math.min(100, Math.max(0, Math.round(progressRef.current)));
+        setBlowProgress(displayProgress);
 
         // Log để debug
         if (lowFreqAvg > 0.1) {
@@ -190,20 +196,32 @@ export function useBlowDetection(
           );
         }
 
-        // Khi progress đạt 100%, trigger success (chỉ khi được phép)
-        if (progressRef.current >= 100) {
-          const now = Date.now();
-          if (now - lastBlowTimeRef.current > BLOW_COOLDOWN && canTrigger()) {
-            lastBlowTimeRef.current = now;
-            progressRef.current = 0; // Reset progress
-            setBlowProgress(0);
-            console.log("💨 PHÁT HIỆN TIẾNG THỔI! (Blow detected!)");
-            onBlowDetected();
-          } else if (!canTrigger()) {
-            // Nếu chưa được phép, reset progress nhưng không trigger
-            progressRef.current = 0;
-            setBlowProgress(0);
-          }
+        // Khi progress đạt đầy (>= 100), đánh dấu và đợi 1 frame để đảm bảo UI đã cập nhật
+        if (progressRef.current >= 100 && !progressReached100Ref.current) {
+          progressReached100Ref.current = true;
+          // Đảm bảo progress hiển thị 100% trên UI
+          setBlowProgress(100);
+          
+          // Đợi 1 frame tiếp theo để đảm bảo UI đã render progress 100%
+          requestAnimationFrame(() => {
+            const now = Date.now();
+            if (now - lastBlowTimeRef.current > BLOW_COOLDOWN && canTrigger()) {
+              lastBlowTimeRef.current = now;
+              progressRef.current = 0; // Reset progress
+              progressReached100Ref.current = false;
+              setBlowProgress(0);
+              console.log("💨 PHÁT HIỆN TIẾNG THỔI! (Blow detected!)");
+              onBlowDetected();
+            } else if (!canTrigger()) {
+              // Nếu chưa được phép, reset progress nhưng không trigger
+              progressRef.current = 0;
+              progressReached100Ref.current = false;
+              setBlowProgress(0);
+            }
+          });
+        } else if (progressRef.current < 100) {
+          // Reset flag nếu progress giảm xuống dưới 100
+          progressReached100Ref.current = false;
         }
 
         animationFrameRef.current = requestAnimationFrame(analyze);
