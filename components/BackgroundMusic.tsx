@@ -57,36 +57,42 @@ export default function BackgroundMusic() {
   }, [volume]);
 
   // Lắng nghe events để pause/resume nhạc khi thổi nến
+  // Sử dụng gainNode thay vì pause/play để tránh mất connection trên mobile
   useEffect(() => {
     const handlePauseMusic = () => {
-      if (audioRef.current && !audioRef.current.paused) {
-        audioRef.current.pause();
+      // Thay vì pause audio, chỉ set volume về 0 để tránh mất connection
+      if (gainNodeRef.current) {
+        gainNodeRef.current.gain.value = 0;
       }
     };
 
     const handleResumeMusic = async () => {
+      // Đảm bảo AudioContext đang running
+      await resumeAudioContext();
+
+      // Restore volume ngay lập tức
+      if (gainNodeRef.current) {
+        gainNodeRef.current.gain.value = volume / 100;
+      }
+
+      // Đảm bảo audio đang play (nếu chưa play thì play)
       if (audioRef.current && audioRef.current.paused) {
-        await resumeAudioContext();
-
-        // Đảm bảo volume được restore lại sau khi resume
-        // Đặc biệt quan trọng trên mobile
-        if (gainNodeRef.current) {
-          gainNodeRef.current.gain.value = volume / 100;
-        }
-
         try {
           await audioRef.current.play();
-
-          // Double-check volume sau khi play (trên mobile đôi khi cần set lại)
-          setTimeout(() => {
-            if (gainNodeRef.current) {
-              gainNodeRef.current.gain.value = volume / 100;
-            }
-          }, 100);
         } catch {
           // Ignore errors
         }
       }
+
+      // Force set volume nhiều lần để đảm bảo trên mobile
+      const intervals = [50, 150, 300, 500];
+      intervals.forEach((delay) => {
+        setTimeout(() => {
+          if (gainNodeRef.current) {
+            gainNodeRef.current.gain.value = volume / 100;
+          }
+        }, delay);
+      });
     };
 
     window.addEventListener("pauseBackgroundMusic", handlePauseMusic);
