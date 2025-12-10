@@ -1,24 +1,85 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import ElasticSlider from "./ElasticSlider";
 
 export default function BackgroundMusic() {
   const audioRef = useRef<HTMLAudioElement>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const gainNodeRef = useRef<GainNode | null>(null);
+  const trackRef = useRef<MediaElementAudioSourceNode | null>(null);
+  const [volume, setVolume] = useState(70); // 0 - 100
+
+  // Initialize Web Audio API khi audio element sẵn sàng
+  useEffect(() => {
+    if (!audioRef.current || audioContextRef.current) return;
+
+    try {
+      // Tạo AudioContext (sẽ bị suspended cho đến khi có user interaction)
+      const AudioContextClass =
+        window.AudioContext ||
+        (window as typeof window & { webkitAudioContext: typeof AudioContext })
+          .webkitAudioContext;
+      const audioContext = new AudioContextClass();
+      audioContextRef.current = audioContext;
+
+      // Tạo MediaElementSource từ audio element
+      const track = audioContext.createMediaElementSource(audioRef.current);
+      trackRef.current = track;
+
+      // Tạo GainNode để điều khiển volume
+      const gainNode = audioContext.createGain();
+      gainNodeRef.current = gainNode;
+
+      // Kết nối: source -> gainNode -> destination
+      track.connect(gainNode).connect(audioContext.destination);
+
+      // Set volume ban đầu
+      gainNode.gain.value = volume / 100;
+
+      console.log("Web Audio API initialized successfully");
+    } catch (error) {
+      console.error("Failed to initialize Web Audio API:", error);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Resume AudioContext khi có user interaction (yêu cầu của browser)
+  const resumeAudioContext = async () => {
+    if (audioContextRef.current?.state === "suspended") {
+      try {
+        await audioContextRef.current.resume();
+        console.log("AudioContext resumed");
+      } catch (error) {
+        console.error("Failed to resume AudioContext:", error);
+      }
+    }
+  };
+
+  // Sync volume to gainNode (hoạt động trên cả desktop và mobile)
+  useEffect(() => {
+    if (gainNodeRef.current) {
+      gainNodeRef.current.gain.value = volume / 100;
+      console.log("Volume changed to:", volume, "gain:", volume / 100);
+    }
+  }, [volume]);
 
   // Auto play background music
   useEffect(() => {
     const playAudio = async () => {
-      if (audioRef.current) {
-        try {
-          audioRef.current.volume = 0.7; // Set volume to 70%
-          await audioRef.current.play();
-          console.log("Background music playing successfully");
-        } catch (error) {
-          console.log(
-            "Auto-play was prevented. Will play on first user interaction:",
-            error
-          );
-        }
+      if (!audioRef.current) return;
+
+      // Resume AudioContext nếu bị suspended
+      await resumeAudioContext();
+
+      try {
+        await audioRef.current.play();
+        console.log("Background music playing successfully");
+      } catch (error) {
+        console.log(
+          "Auto-play was prevented. Will play on first user interaction:",
+          error
+        );
       }
     };
 
@@ -27,6 +88,7 @@ export default function BackgroundMusic() {
 
     // Also try to play on any user interaction (click, touch, keypress)
     const handleFirstInteraction = async () => {
+      await resumeAudioContext();
       if (audioRef.current && audioRef.current.paused) {
         try {
           await audioRef.current.play();
@@ -57,22 +119,52 @@ export default function BackgroundMusic() {
     };
   }, []);
 
+  // Cleanup: đóng AudioContext khi component unmount
+  useEffect(() => {
+    return () => {
+      if (audioContextRef.current) {
+        audioContextRef.current
+          .close()
+          .then(() => {
+            console.log("AudioContext closed");
+          })
+          .catch((error) => {
+            console.error("Error closing AudioContext:", error);
+          });
+      }
+    };
+  }, []);
+
   return (
-    <audio
-      ref={audioRef}
-      src="/spring-day.m4a"
-      loop
-      preload="auto"
-      className="hidden"
-      onLoadedData={() => {
-        console.log("Background music file loaded successfully");
-      }}
-      onError={(e) => {
-        console.error("Error loading background music:", e);
-      }}
-      onPlay={() => {
-        console.log("Background music is playing");
-      }}
-    />
+    <>
+      <audio
+        ref={audioRef}
+        src="/spring-day.m4a"
+        loop
+        preload="auto"
+        className="hidden"
+        onLoadedData={() => {
+          console.log("Background music file loaded successfully");
+        }}
+        onError={(e) => {
+          console.error("Error loading background music:", e);
+        }}
+        onPlay={() => {
+          console.log("Background music is playing");
+        }}
+      />
+
+      {/* Dùng ElasticSlider để điều khiển âm lượng, dọc bên trái */}
+      <div className="fixed left-3 lg:left-10 top-1/2 z-50 -translate-y-1/2">
+        <ElasticSlider
+          defaultValue={volume}
+          startingValue={0}
+          maxValue={100}
+          isStepped
+          stepSize={1}
+          onChange={(val) => setVolume(Math.round(val))}
+        />
+      </div>
+    </>
   );
 }
