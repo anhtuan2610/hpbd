@@ -9,6 +9,7 @@ export default function BackgroundMusic() {
   const gainNodeRef = useRef<GainNode | null>(null);
   const trackRef = useRef<MediaElementAudioSourceNode | null>(null);
   const [volume, setVolume] = useState(70); // 0 - 100
+  const volumeBeforePauseRef = useRef<number>(70); // Lưu volume ban đầu trước khi pause
 
   // Initialize Web Audio API khi audio element sẵn sàng
   useEffect(() => {
@@ -53,6 +54,10 @@ export default function BackgroundMusic() {
   useEffect(() => {
     if (gainNodeRef.current) {
       gainNodeRef.current.gain.value = volume / 100;
+      // Cập nhật volumeBeforePauseRef nếu volume > 0 (tránh lưu 0 khi đang pause)
+      if (volume > 0) {
+        volumeBeforePauseRef.current = volume;
+      }
     }
   }, [volume]);
 
@@ -60,6 +65,11 @@ export default function BackgroundMusic() {
   // Sử dụng gainNode thay vì pause/play để tránh mất connection trên mobile
   useEffect(() => {
     const handlePauseMusic = () => {
+      // Lưu volume hiện tại trước khi pause (chỉ lưu nếu volume > 0, tránh lưu 0)
+      if (gainNodeRef.current && gainNodeRef.current.gain.value > 0) {
+        volumeBeforePauseRef.current = gainNodeRef.current.gain.value * 100;
+      }
+
       // Thay vì pause audio, chỉ set volume về 0 để tránh mất connection
       if (gainNodeRef.current) {
         gainNodeRef.current.gain.value = 0;
@@ -70,10 +80,14 @@ export default function BackgroundMusic() {
       // Đảm bảo AudioContext đang running
       await resumeAudioContext();
 
-      // Restore volume ngay lập tức
+      // Restore volume ban đầu (trước khi pause), không phải volume state hiện tại
+      const volumeToRestore = volumeBeforePauseRef.current / 100;
       if (gainNodeRef.current) {
-        gainNodeRef.current.gain.value = volume / 100;
+        gainNodeRef.current.gain.value = volumeToRestore;
       }
+
+      // Sync volume state với volume đã restore (để slider hiển thị đúng)
+      setVolume(volumeBeforePauseRef.current);
 
       // Đảm bảo audio đang play (nếu chưa play thì play)
       if (audioRef.current && audioRef.current.paused) {
@@ -89,7 +103,7 @@ export default function BackgroundMusic() {
       intervals.forEach((delay) => {
         setTimeout(() => {
           if (gainNodeRef.current) {
-            gainNodeRef.current.gain.value = volume / 100;
+            gainNodeRef.current.gain.value = volumeToRestore;
           }
         }, delay);
       });
