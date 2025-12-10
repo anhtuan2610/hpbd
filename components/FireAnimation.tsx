@@ -19,7 +19,7 @@ export default function FireAnimation() {
   if (!memoizedData) return null;
 
   return (
-    <div className="absolute -top-5 left-1/2 -translate-x-1/2 w-8 h-8 md:w-12 md:h-12 pointer-events-none">
+    <div className="absolute -top-4 lg:-top-5 left-1/2 -translate-x-1/2 w-8 h-8 md:w-12 md:h-12 pointer-events-none">
       <Lottie
         animationData={memoizedData}
         loop={true}
