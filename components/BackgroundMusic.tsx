@@ -36,9 +36,7 @@ export default function BackgroundMusic() {
 
       // Set volume ban đầu
       gainNode.gain.value = volume / 100;
-
-    } catch (error) {
-    }
+    } catch {}
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -47,8 +45,7 @@ export default function BackgroundMusic() {
     if (audioContextRef.current?.state === "suspended") {
       try {
         await audioContextRef.current.resume();
-      } catch (error) {
-      }
+      } catch {}
     }
   };
 
@@ -58,6 +55,34 @@ export default function BackgroundMusic() {
       gainNodeRef.current.gain.value = volume / 100;
     }
   }, [volume]);
+
+  // Lắng nghe events để pause/resume nhạc khi thổi nến
+  useEffect(() => {
+    const handlePauseMusic = () => {
+      if (audioRef.current && !audioRef.current.paused) {
+        audioRef.current.pause();
+      }
+    };
+
+    const handleResumeMusic = async () => {
+      if (audioRef.current && audioRef.current.paused) {
+        await resumeAudioContext();
+        try {
+          await audioRef.current.play();
+        } catch {
+          // Ignore errors
+        }
+      }
+    };
+
+    window.addEventListener("pauseBackgroundMusic", handlePauseMusic);
+    window.addEventListener("resumeBackgroundMusic", handleResumeMusic);
+
+    return () => {
+      window.removeEventListener("pauseBackgroundMusic", handlePauseMusic);
+      window.removeEventListener("resumeBackgroundMusic", handleResumeMusic);
+    };
+  }, []);
 
   // Auto play background music
   useEffect(() => {
@@ -69,8 +94,7 @@ export default function BackgroundMusic() {
 
       try {
         await audioRef.current.play();
-      } catch (error) {
-      }
+      } catch {}
     };
 
     // Try to play immediately
@@ -82,8 +106,7 @@ export default function BackgroundMusic() {
       if (audioRef.current && audioRef.current.paused) {
         try {
           await audioRef.current.play();
-        } catch (error) {
-        }
+        } catch {}
       }
     };
 

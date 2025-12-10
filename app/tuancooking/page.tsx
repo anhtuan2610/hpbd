@@ -82,6 +82,21 @@ export default function Page2() {
     stopListeningRef.current = stopListening;
   }, [stopListening]);
 
+  // Pause nhạc khi bắt đầu thổi, resume khi dừng (delay 1s)
+  useEffect(() => {
+    if (isListening) {
+      // Bắt đầu thổi → pause nhạc ngay lập tức
+      window.dispatchEvent(new CustomEvent("pauseBackgroundMusic"));
+    } else {
+      // Dừng thổi → resume nhạc sau 1 giây
+      const timeoutId = setTimeout(() => {
+        window.dispatchEvent(new CustomEvent("resumeBackgroundMusic"));
+      }, 1000);
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [isListening]);
+
   // Hàm chuyển theme với animation mượt mà (giống ThemeButton)
   const changeThemeWithAnimation = (newTheme: "light" | "dark") => {
     // Tìm ThemeButton container để lấy vị trí cho animation
@@ -136,6 +151,11 @@ export default function Page2() {
     setIsBlowConfirmed(true); // Cho phép thổi tiếp
     hasShownSuccess.current = false; // Reset để có thể hiện lại nếu cần
     stopListening(); // Đảm bảo dừng nghe microphone
+
+    // Resume nhạc sau 1 giây khi thổi xong
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent("resumeBackgroundMusic"));
+    }, 1000);
 
     // Chuyển theme với animation mượt mà
     setTimeout(() => {

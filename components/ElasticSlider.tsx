@@ -31,8 +31,8 @@ const ElasticSlider: React.FC<ElasticSliderProps> = ({
   className = "",
   isStepped = false,
   stepSize = 1,
-  leftIcon = <Volume2 />,
-  rightIcon = <Volume1 />,
+  leftIcon = <Volume2 className="text-pink-600" />,
+  rightIcon = <Volume1 className="text-pink-600" />,
   onChange,
 }) => {
   return (
@@ -154,6 +154,7 @@ const Slider: React.FC<SliderProps> = ({
               region === "top" ? -overflow.get() / scale.get() : 0
             ),
           }}
+          className="text-pink-600"
         >
           {leftIcon}
         </motion.div>
@@ -211,6 +212,7 @@ const Slider: React.FC<SliderProps> = ({
               region === "bottom" ? overflow.get() / scale.get() : 0
             ),
           }}
+          className="text-pink-600"
         >
           {rightIcon}
         </motion.div>
