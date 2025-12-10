@@ -19,7 +19,7 @@ export default function CuteDoggie() {
     fetch("/Cute Doggie.json")
       .then((res) => res.json())
       .then((data) => setAnimationData(data))
-      .catch((err) => console.error("Error loading animation:", err));
+      .catch(() => {});
   }, []);
 
   useEffect(() => {

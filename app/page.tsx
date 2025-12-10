@@ -47,9 +47,7 @@ export default function Home() {
             </div>
             <PowerOffSlide
               label="Đi thổi nến nào"
-              onPowerOff={() => {
-                console.log("Power off triggered");
-              }}
+              onPowerOff={() => {}}
               href="/tuancooking"
               className=""
             />

@@ -20,7 +20,7 @@ const BlowSuccessModal = memo(function BlowSuccessModal({
       fetch("/Party.json")
         .then((res) => res.json())
         .then((data) => setPartyAnimationData(data))
-        .catch((err) => console.error("Error loading party animation:", err));
+        .catch(() => {});
     }
   }, [show]);
 

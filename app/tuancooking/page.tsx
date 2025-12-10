@@ -62,7 +62,6 @@ export default function Page2() {
         return; // Bỏ qua nếu chưa xác nhận hoặc đã hiện thông báo
       }
 
-      console.log("🔥 Xử lý tiếng thổi - sẽ tắt nến ở đây");
       // Hiển thị thông báo và chặn thổi tiếp
       hasShownSuccess.current = true; // Đánh dấu đã hiện
       setShowBlowSuccess(true);
