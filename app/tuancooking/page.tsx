@@ -16,6 +16,7 @@ import BackButton from "@/components/BackButton";
 import BlowSuccessModal from "@/components/BlowSuccessModal";
 import ErrorNotification from "@/components/ErrorNotification";
 import LoadingIndicator from "@/components/LoadingIndicator";
+import Image from "next/image";
 
 type CandlePosition = {
   id: number;
@@ -192,7 +193,7 @@ export default function Page2() {
         data-theme-button-container
       >
         {/* Mũi tên chỉ vào nút toggle ở góc 8 giờ */}
-        {/* <div className="absolute -bottom-4 -left-22 pointer-events-none z-30">
+        <div className="absolute -bottom-4 -left-22 pointer-events-none z-30">
           <p
             className="absolute text-base font-semibold text-pink-600 dark:text-pink-400 drop-shadow-lg whitespace-nowrap"
             style={{
@@ -212,7 +213,7 @@ export default function Page2() {
               style={{ transform: "rotate(30deg)" }}
             />
           </div>
-        </div> */}
+        </div>
         {/* <AnimatedThemeToggler className="rounded-full bg-white/80 dark:bg-gray-800/80 p-3 shadow-lg hover:bg-white dark:hover:bg-gray-800 transition-colors" /> */}
         <ThemeButton />
       </div>

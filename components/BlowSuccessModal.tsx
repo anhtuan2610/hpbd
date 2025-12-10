@@ -46,7 +46,7 @@ const BlowSuccessModal = memo(function BlowSuccessModal({
           <div className="text-center">
             <div className="text-7xl mb-4 animate-bounce">🎉</div>
             <div className="text-3xl font-bold mb-2">
-              Chúc Quyên tuổi 24 mọi thứ tốt đẹp!
+              Chúc Quyên tuổi 24 mọi thứ tốt đẹp nhất!
             </div>
             <button
               onClick={onConfirm}
@@ -64,4 +64,3 @@ const BlowSuccessModal = memo(function BlowSuccessModal({
 BlowSuccessModal.displayName = "BlowSuccessModal";
 
 export default BlowSuccessModal;
-
