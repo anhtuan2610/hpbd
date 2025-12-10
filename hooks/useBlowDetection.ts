@@ -30,7 +30,6 @@ export function useBlowDetection(
     try {
       setError(null);
       setIsLoading(true);
-      console.log("🎤 Đang yêu cầu quyền truy cập microphone...");
 
       // Kiểm tra secure context (HTTPS hoặc localhost)
       const isSecureContext =
@@ -91,7 +90,6 @@ export function useBlowDetection(
       setIsListening(true);
       setIsLoading(false);
       setError(null);
-      console.log("✅ Đã có quyền truy cập microphone");
 
       // Tạo AudioContext
       const audioContext = new (window.AudioContext ||
@@ -114,7 +112,6 @@ export function useBlowDetection(
       const dataArray = new Uint8Array(bufferLength);
       dataArrayRef.current = dataArray as any;
 
-      console.log("🎧 Bắt đầu phân tích audio...");
 
       // Hàm phân tích audio liên tục với thanh progress
       const PROGRESS_FRAMES_NEEDED = 40; // Cần 40 frame (khoảng 0.7s) để đầy thanh - nhạy hơn cho mobile
@@ -179,16 +176,6 @@ export function useBlowDetection(
         // Cập nhật progress state
         setBlowProgress(progressRef.current);
 
-        // Log để debug
-        if (lowFreqAvg > 0.1) {
-          console.log(
-            `📊 Low: ${(lowFreqAvg * 100).toFixed(
-              1
-            )}% | Progress: ${progressRef.current.toFixed(1)}% | Pattern: ${
-              isBlowPattern ? "✅" : "❌"
-            }`
-          );
-        }
 
         // Khi progress đạt 100%, trigger success (chỉ khi được phép)
         if (progressRef.current >= 100) {
@@ -197,7 +184,6 @@ export function useBlowDetection(
             lastBlowTimeRef.current = now;
             progressRef.current = 0; // Reset progress
             setBlowProgress(0);
-            console.log("💨 PHÁT HIỆN TIẾNG THỔI! (Blow detected!)");
             onBlowDetected();
           } else if (!canTrigger()) {
             // Nếu chưa được phép, reset progress nhưng không trigger
@@ -211,7 +197,6 @@ export function useBlowDetection(
 
       analyze();
     } catch (err: any) {
-      console.error("❌ Lỗi khi truy cập microphone:", err);
       setHasPermission(false);
       setIsListening(false);
       setIsLoading(false);
@@ -262,7 +247,6 @@ export function useBlowDetection(
     }
 
     setIsListening(false);
-    console.log("🛑 Đã dừng nghe microphone");
   };
 
   useEffect(() => {

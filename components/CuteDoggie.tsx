@@ -19,7 +19,7 @@ export default function CuteDoggie() {
     fetch("/Cute Doggie.json")
       .then((res) => res.json())
       .then((data) => setAnimationData(data))
-      .catch((err) => console.error("Error loading animation:", err));
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -170,7 +170,7 @@ export default function CuteDoggie() {
                 <div>
                   <TextType
                     key={`phase-3-line1-${textKey}`}
-                    text="Chúc Quyên sinh nhật"
+                    text="Chúc Quyên tuổi mới"
                     as="span"
                     className=""
                     typingSpeed={50}
@@ -184,11 +184,11 @@ export default function CuteDoggie() {
                 <div>
                   <TextType
                     key={`phase-3-line2-${textKey}`}
-                    text="vui vẻ nhé !"
+                    text="hay ăn chóng lớn nhé !"
                     as="span"
                     className=""
                     typingSpeed={50}
-                    initialDelay={"Chúc Quyên sinh nhật".length * 50}
+                    initialDelay={"Chúc Quyên tuổi mới".length * 50}
                     pauseDuration={3000}
                     loop={false}
                     showCursor={true}

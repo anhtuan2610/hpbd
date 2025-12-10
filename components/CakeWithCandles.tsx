@@ -27,14 +27,14 @@ const CakeWithCandles = memo(function CakeWithCandles({
     <div className="relative flex flex-col items-center gap-8">
       {/* Mũi tên trỏ vào bánh kem (từ trên xuống) */}
       {candles.length === 0 && (
-        <div className="absolute -top-20 left-20 -translate-x-1/2 pointer-events-none z-30">
+        <div className="absolute -top-10 left-20 -translate-x-1/2 pointer-events-none z-30">
           <p
             className="absolute text-base font-semibold text-pink-600 dark:text-pink-400 drop-shadow-lg whitespace-nowrap"
             style={{
-              top: "-30px",
-              left: "20%",
+              top: "-50px",
+              left: "-20%",
               transform: "translateX(-50%)",
-              rotate: "-10deg",
+              rotate: "-30deg",
             }}
           >
             Cắm nến vào đây nhé
@@ -45,7 +45,7 @@ const CakeWithCandles = memo(function CakeWithCandles({
               alt="Arrow pointing to cake"
               fill
               className="object-contain"
-              style={{ transform: "rotate(90deg)" }}
+              style={{ transform: "rotate(70deg)" }}
             />
           </div>
         </div>

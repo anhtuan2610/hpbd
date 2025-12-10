@@ -16,7 +16,7 @@ export default function Home() {
 
         {/* Nội dung */}
         <main className="relative z-10 flex h-full items-start justify-center">
-          <CurvedLoop marqueeText="Happy Birthday! Chúc mừng Quyên sinh nhật vui vẻ nhé! " />
+          <CurvedLoop marqueeText="Happy Birthday! Chúc mừng bạn Quyên tuổi mới zui zẻ! " />
         </main>
 
         {/* Slide Button ở giữa màn hình */}
@@ -47,9 +47,7 @@ export default function Home() {
             </div>
             <PowerOffSlide
               label="Đi thổi nến nào"
-              onPowerOff={() => {
-                console.log("Power off triggered");
-              }}
+              onPowerOff={() => {}}
               href="/tuancooking"
               className=""
             />

@@ -37,9 +37,7 @@ export default function BackgroundMusic() {
       // Set volume ban đầu
       gainNode.gain.value = volume / 100;
 
-      console.log("Web Audio API initialized successfully");
     } catch (error) {
-      console.error("Failed to initialize Web Audio API:", error);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -49,9 +47,7 @@ export default function BackgroundMusic() {
     if (audioContextRef.current?.state === "suspended") {
       try {
         await audioContextRef.current.resume();
-        console.log("AudioContext resumed");
       } catch (error) {
-        console.error("Failed to resume AudioContext:", error);
       }
     }
   };
@@ -60,7 +56,6 @@ export default function BackgroundMusic() {
   useEffect(() => {
     if (gainNodeRef.current) {
       gainNodeRef.current.gain.value = volume / 100;
-      console.log("Volume changed to:", volume, "gain:", volume / 100);
     }
   }, [volume]);
 
@@ -74,12 +69,7 @@ export default function BackgroundMusic() {
 
       try {
         await audioRef.current.play();
-        console.log("Background music playing successfully");
       } catch (error) {
-        console.log(
-          "Auto-play was prevented. Will play on first user interaction:",
-          error
-        );
       }
     };
 
@@ -92,9 +82,7 @@ export default function BackgroundMusic() {
       if (audioRef.current && audioRef.current.paused) {
         try {
           await audioRef.current.play();
-          console.log("Background music started after user interaction");
         } catch (error) {
-          console.error("Failed to play background music:", error);
         }
       }
     };
@@ -125,12 +113,8 @@ export default function BackgroundMusic() {
       if (audioContextRef.current) {
         audioContextRef.current
           .close()
-          .then(() => {
-            console.log("AudioContext closed");
-          })
-          .catch((error) => {
-            console.error("Error closing AudioContext:", error);
-          });
+          .then(() => {})
+          .catch(() => {});
       }
     };
   }, []);
@@ -143,15 +127,9 @@ export default function BackgroundMusic() {
         loop
         preload="auto"
         className="hidden"
-        onLoadedData={() => {
-          console.log("Background music file loaded successfully");
-        }}
-        onError={(e) => {
-          console.error("Error loading background music:", e);
-        }}
-        onPlay={() => {
-          console.log("Background music is playing");
-        }}
+        onLoadedData={() => {}}
+        onError={() => {}}
+        onPlay={() => {}}
       />
 
       {/* Dùng ElasticSlider để điều khiển âm lượng, dọc bên trái */}

@@ -31,8 +31,8 @@ const ElasticSlider: React.FC<ElasticSliderProps> = ({
   className = "",
   isStepped = false,
   stepSize = 1,
-  leftIcon = <Volume2 />,
-  rightIcon = <Volume1 />,
+  leftIcon = <Volume2 className="text-pink-600" />,
+  rightIcon = <Volume1 className="text-pink-600" />,
   onChange,
 }) => {
   return (
